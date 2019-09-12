@@ -3,7 +3,7 @@
 
 ## introduction
 
-Purpose: I want to make a face analyzer including face detect and face aligment. Most of the face keypoints codes that opensourced are not stable or smooth, including some research papers. And the commercial sdk is pretty expensive. So, there is **Peppa_Pig_Face-Engine**.  
+Purpose: I want to make a face analyzer including face detect and face aligment. Most of the face keypoints codes that opensourced are not stable or smooth, including some research papers. And the commercial sdk is pretty expensive. So, there is **Peppa_Pig_Face_Engine**.  
 
 
 
