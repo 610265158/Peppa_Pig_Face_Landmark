@@ -26,8 +26,9 @@ class GroupTrack():
                 return now_landmarks_set
             else:
                 result=[]
-                not_in_flag=True
+
                 for i in range(now_landmarks_set.shape[0]):
+                    not_in_flag = True
                     for j in range(self.previous_landmarks_set.shape[0]):
                         if self.iou(now_landmarks_set[i],self.previous_landmarks_set[j])>self.iou_thres:
 
@@ -36,7 +37,7 @@ class GroupTrack():
                             break
                     if not_in_flag:
                         result.append(now_landmarks_set[i])
-                        not_in_flag = True
+
 
 
 
@@ -57,17 +58,15 @@ class GroupTrack():
         sum_area = S_rec1 + S_rec2
 
         # find the each edge of intersect rectangle
-        left_line = max(rec1[1], rec2[1])
-        right_line = min(rec1[3], rec2[3])
-        top_line = max(rec1[0], rec2[0])
-        bottom_line = min(rec1[2], rec2[2])
+        x1 = max(rec1[0], rec2[0])
+        y1 = max(rec1[1], rec2[1])
+        x2 = min(rec1[2], rec2[2])
+        y2 = min(rec1[3], rec2[3])
 
         # judge if there is an intersect
-        if left_line >= right_line or top_line >= bottom_line:
-            return 0
-        else:
-            intersect = (right_line - left_line) * (bottom_line - top_line)
-            return intersect / (sum_area - intersect)
+        intersect = max(0, x2 - x1) * max(0, y2 - y1)
+
+        return intersect / (sum_area - intersect)
 
 
     def smooth(self,now_landmarks,previous_landmarks):

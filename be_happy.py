@@ -22,9 +22,9 @@ def video(video_path_or_cam):
 
         ret, img = vide_capture.read()
 
-        #img = cv2.resize(img, None, fx=1.4, fy=1.4)
+        img = cv2.resize(img, None, fx=1.4, fy=1.4)
         #img = cv2.resize(img, (1280 , 960))
-        img=img[220:1000,:,:]
+        #img=img[220:1000,:,:]
         img_show = img.copy()
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
