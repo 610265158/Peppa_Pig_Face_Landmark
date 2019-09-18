@@ -84,7 +84,7 @@ class FaceAna():
 
         picked=area.argsort()[-self.top_k:][::-1]
         sorted_bboxes=[bboxes[x] for x in picked]
-        return sorted_bboxes
+        return np.array(sorted_bboxes)
 
     def judge_boxs(self,previuous_bboxs,now_bboxs):
         def iou(rec1, rec2):
