@@ -7,7 +7,7 @@ Purpose: I want to make a face analyzer including face detect and face aligment.
 
 
 
-It is a simple demo including face detection and face aligment, and some optimizations were made to make the result becomes smooth.
+It is a simple demo including face detection and face aligment, and some optimizations were made to make the result smooth.
 
 
 I think it is pretty cool, see the demo:
