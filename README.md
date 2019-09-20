@@ -3,7 +3,7 @@
 
 ## introduction
 
-Purpose: I want to make a face analyzer including face detect and face aligment. Most of the face keypoints codes that opensourced are Neither stable nor smooth, including some research papers. And the commercial sdk is pretty expensive. So, there is **Peppa_Pig_Face_Engine**.  
+Purpose: I want to make a face analyzer including face detect and face alignment. Most of the face keypoints codes that opensourced are neither stable nor smooth, including some research papers. And the commercial sdk is pretty expensive. So, there is **Peppa_Pig_Face_Engine**.  
 
 
 
@@ -12,7 +12,7 @@ It is a simple demo including face detection and face aligment, and some optimiz
 
 I think it is pretty cool, see the demo:
 
-![demo](https://github.com/610265158/simpleface-engine/blob/master/figure/sample.gif)
+Press the git to watch the demo video.
 [![demo](https://github.com/610265158/simpleface-engine/blob/master/figure/sample.gif)](https://pan.baidu.com/play/video#/video?path=%2Fdemos%2FoutputVideo.avi&t=-1)
 
 
@@ -34,13 +34,13 @@ I think it is pretty cool, see the demo:
 
 
 ##  Train
-The project is based on two of my repos ,if you want to train with your own data, or details about the models.
+The project is based on two of my other repos ,if you want to train with your own data, or know the details about the models.
 
  + [faceboxes](https://github.com/610265158/faceboxes-tensorflow.git)
  + [face_landmark](https://github.com/610265158/face_landmark.git)
 
 
 ## ps
-The project is support by myself, i needs your advice to improve it.
+The project is supported by myself, i need your advice to improve it.
 Hope the codes can help you, contact me if u have any question( 2120140200@mail.nankai.edu.cn), and i need your star,also your contribution.
 
