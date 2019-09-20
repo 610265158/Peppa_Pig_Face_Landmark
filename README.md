@@ -13,6 +13,7 @@ It is a simple demo including face detection and face aligment, and some optimiz
 I think it is pretty cool, see the demo:
 
 ![demo](https://github.com/610265158/simpleface-engine/blob/master/figure/sample.gif)
+[![demo](https://github.com/610265158/simpleface-engine/blob/master/figure/sample.gif)](https://pan.baidu.com/play/video#/video?path=%2Fdemos%2FoutputVideo.avi&t=-1)
 
 
 ## useage
