@@ -12,7 +12,6 @@ It is a simple demo including face detection and face aligment, and some optimiz
 
 I think it is pretty cool, see the demo:
 
-Press the git to watch the demo video.
 [![demo](https://github.com/610265158/simpleface-engine/blob/master/figure/sample.gif)](https://v.youku.com/v_show/id_XNDM2OTM5NTEzNg==.html?spm=a2h3j.8428770.3416059.1)
 
 
