@@ -34,7 +34,7 @@ click the gif to see the video:
 
 
 ##  Train
-The project is based on two of my other repos. if you want to train with your own data, or you want to know the details about the models, click them.
+The project is based on two of my other repos. If you want to train with your own data, or you want to know the details about the models, click them.
 
  + [faceboxes](https://github.com/610265158/faceboxes-tensorflow.git)
  + [face_landmark](https://github.com/610265158/face_landmark.git)
