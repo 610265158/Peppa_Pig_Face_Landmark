@@ -12,7 +12,7 @@ class GroupTrack():
 
         self.with_landmark = True
         self.thres=cfg.TRACE.pixel_thres
-        self.alpha=cfg.TRACE.smooth
+        self.alpha=cfg.TRACE.smooth_landmark
         self.iou_thres=cfg.TRACE.iou_thres
 
     def calculate(self, img, now_landmarks_set):

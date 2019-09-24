@@ -23,6 +23,7 @@ class FaceAna():
         self.diff_thres=5
         self.iou_thres=cfg.TRACE.iou_thres
 
+        self.alpha=cfg.TRACE.smooth_box
     def run(self,image):
 
         start = time.time()
@@ -60,12 +61,9 @@ class FaceAna():
             return True
         else:
 
-            previous_frame = cv2.cvtColor(previous_frame, cv2.COLOR_BGR2GRAY)
-
-            image=cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
             _diff = cv2.absdiff(previous_frame, image)
 
-            diff=np.sum(_diff)/previous_frame.shape[0]/previous_frame.shape[1]
+            diff=np.sum(_diff)/previous_frame.shape[0]/previous_frame.shape[1]/3.
             #print(diff)
             if diff>self.diff_thres:
                 return True
@@ -85,6 +83,7 @@ class FaceAna():
         picked=area.argsort()[-self.top_k:][::-1]
         sorted_bboxes=[bboxes[x] for x in picked]
         return np.array(sorted_bboxes)
+
 
     def judge_boxs(self,previuous_bboxs,now_bboxs):
         def iou(rec1, rec2):
@@ -116,7 +115,7 @@ class FaceAna():
         for i in range(now_bboxs.shape[0]):
             for j in range(previuous_bboxs.shape[0]):
                 if iou(now_bboxs[i], previuous_bboxs[j]) > self.iou_thres:
-                    result.append(previuous_bboxs[j])
+                    result.append(self.smooth(now_bboxs[i],previuous_bboxs[j]))
                     contain=True
                     break
             if contain:
@@ -128,6 +127,13 @@ class FaceAna():
 
         return np.array(result)
 
+    def smooth(self,now_box,previous_box):
+
+        return self.do_moving_average(now_box[:4], previous_box[:4])
+
+    def do_moving_average(self,p_now,p_previous):
+        p=self.alpha*p_now+(1-self.alpha)*p_previous
+        return p
 
 
 
