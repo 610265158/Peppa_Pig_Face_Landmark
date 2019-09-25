@@ -15,6 +15,8 @@ I think it is pretty cool, see the demo:
 click the gif to see the video:
 [![demo](https://github.com/610265158/simpleface-engine/blob/master/figure/sample.gif)](https://v.youku.com/v_show/id_XNDM3MTY4MTM2MA==.html?spm=a2h3j.8428770.3416059.1)
 
+and with face mask:
+[face mask](https://github.com/610265158/Peppa_Pig_Face_Engine/blob/master/figure/masked_screenshot_25.09.2019.png)
 
 ## useage
 
