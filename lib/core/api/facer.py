@@ -34,7 +34,8 @@ class FaceAna():
         if self.diff_frames(self.previous_image,image):
             boxes = self.face_detector(image)
             self.previous_image=image
-            #self.track_box=None
+            boxes = self.judge_boxs(self.track_box, boxes)
+
         else:
             boxes=self.track_box
             self.previous_image = image
@@ -43,7 +44,6 @@ class FaceAna():
         if boxes.shape[0]>self.top_k:
             boxes=self.sort(boxes)
 
-        boxes=self.judge_boxs(self.track_box,boxes)
 
         boxes_return = np.array(boxes)
 
@@ -129,7 +129,7 @@ class FaceAna():
                 result.append(now_bboxs[i])
 
 
-        return np.array(result).astype(np.int)
+        return np.floor(np.array(result))
 
     def smooth(self,now_box,previous_box):
 
