@@ -4,6 +4,7 @@ import time
 
 from lib.core.api.face_keypoint import Keypoints
 from lib.core.api.face_detector import FaceDetector
+from lib.core.LK.lk import GroupTrack
 from config import config as cfg
 
 class FaceAna():
@@ -14,6 +15,8 @@ class FaceAna():
     def __init__(self):
         self.face_detector = FaceDetector()
         self.face_landmark =Keypoints()
+        self.trace = GroupTrack()
+
         self.top_k=cfg.DETECT.topk
 
         ###another thread should do detector in a slow way and update the track_box
@@ -21,6 +24,7 @@ class FaceAna():
         self.previous_image=None
         self.previous_box=None
         self.diff_thres=5
+
         self.iou_thres=cfg.TRACE.iou_thres
 
         self.alpha=cfg.TRACE.smooth_box
@@ -43,7 +47,9 @@ class FaceAna():
 
         boxes_return = np.array(boxes)
 
+
         landmarks,states=self.face_landmark.run(image,boxes)
+        landmarks = self.trace.calculate(image, landmarks)
 
         if 1:
             track=[]
@@ -54,7 +60,7 @@ class FaceAna():
         # else:
         #     self.track_box = self.judge_boxs(boxes_return,)
 
-        return boxes_return,landmarks,states
+        return self.track_box,landmarks,states
 
     def diff_frames(self,previous_frame,image):
         if previous_frame is None:
@@ -111,21 +117,19 @@ class FaceAna():
             return now_bboxs
 
         result=[]
-        contain=False
+
         for i in range(now_bboxs.shape[0]):
+            contain = False
             for j in range(previuous_bboxs.shape[0]):
                 if iou(now_bboxs[i], previuous_bboxs[j]) > self.iou_thres:
                     result.append(self.smooth(now_bboxs[i],previuous_bboxs[j]))
                     contain=True
                     break
-            if contain:
-                contain = False
-
-            else:
+            if not contain:
                 result.append(now_bboxs[i])
-                contain=False
 
-        return np.array(result)
+
+        return np.array(result).astype(np.int)
 
     def smooth(self,now_box,previous_box):
 

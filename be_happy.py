@@ -8,7 +8,6 @@ from lib.core.LK.lk import GroupTrack
 
 from lib.core.headpose.pose import get_head_pose, line_pairs
 facer = FaceAna()
-trace = GroupTrack()
 
 
 
@@ -33,8 +32,6 @@ def video(video_path_or_cam):
 
         duration=time.time()-star
         print('one iamge cost %f s'%(duration))
-
-        landmarks=trace.calculate(img,landmarks)
 
 
         for face_index in range(landmarks.shape[0]):

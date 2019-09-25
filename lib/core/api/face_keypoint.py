@@ -39,7 +39,7 @@ class Keypoints:
 
         return _keypoints,_states
 
-    def run(self,_img,_bboxes):
+    def run(self,img,bboxes):
         #### should be batched process
         #### but process one by one, more simple
 
@@ -47,14 +47,14 @@ class Keypoints:
 
         landmark_result=[]
         state_result=[]
-        for _box in _bboxes:
-            LANDMARK,_STATE=self._one_shot_run(_img,_box)
-            if LANDMARK is not None:
-                landmark_result.append(LANDMARK)
-                state_result.append(_STATE)
+        for i,box in enumerate(bboxes):
+            landmark,state=self._one_shot_run(img,box,i)
+            if landmark is not None:
+                landmark_result.append(landmark)
+                state_result.append(state)
         return np.array(landmark_result),np.array(state_result)
 
-    def _one_shot_run(self,image,bbox):
+    def _one_shot_run(self,image,bbox,i):
 
         ##preprocess
         bbox_width = bbox[2] - bbox[0]
@@ -84,7 +84,7 @@ class Keypoints:
         h, w, _ = crop_image.shape
         crop_image = cv2.resize(crop_image, (cfg.KEYPOINTS.input_shape[1], cfg.KEYPOINTS.input_shape[0]))
 
-        cv2.imshow('tt',crop_image)
+        cv2.imshow('i am watching u * * %d'%i,crop_image)
 
 
         crop_image = crop_image.astype(np.float32)
