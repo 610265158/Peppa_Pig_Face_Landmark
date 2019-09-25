@@ -30,8 +30,8 @@ click the gif to see the video:
     
     +[googledrive](https://drive.google.com/drive/folders/1YHtaLkalAqURbkIYYJBLf6HJZzd6vzOG?usp=sharing)
 2. run `python demo.py --cam_id 0`    
-   or  `python demo.py --video test.mp4`
-   if u want a mask `python demo.py --video test.mp4 --mask True`
+   or  `python demo.py --video test.mp4`     
+   or `python demo.py --video test.mp4 --mask True` if u want a face mask
     
 
 ##  Train
