@@ -129,7 +129,7 @@ class FaceAna():
                 result.append(now_bboxs[i])
 
 
-        return np.floor(np.array(result))
+        return np.array(result)
 
     def smooth(self,now_box,previous_box):
 
