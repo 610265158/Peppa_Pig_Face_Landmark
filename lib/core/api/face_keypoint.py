@@ -60,7 +60,7 @@ class Keypoints:
         bbox_width = bbox[2] - bbox[0]
         bbox_height = bbox[3] - bbox[1]
         if bbox_width<=self.min_face or bbox_height<=self.min_face:
-            return None
+            return None,None
         add = int(max(bbox_width, bbox_height))
         bimg = cv2.copyMakeBorder(image, add, add, add, add, borderType=cv2.BORDER_CONSTANT,
                                   value=cfg.DATA.pixel_means)

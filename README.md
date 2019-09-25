@@ -31,7 +31,8 @@ click the gif to see the video:
     +[googledrive](https://drive.google.com/drive/folders/1YHtaLkalAqURbkIYYJBLf6HJZzd6vzOG?usp=sharing)
 2. run `python demo.py --cam_id 0`    
    or  `python demo.py --video test.mp4`
-
+   if u want a mask `python demo.py --video test.mp4 --mask True`
+    
 
 ##  Train
 The project is based on two of my other repos. If you want to train with your own data, or you want to know the details about the models, click them.

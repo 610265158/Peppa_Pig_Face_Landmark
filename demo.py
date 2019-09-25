@@ -1,6 +1,7 @@
 
 import cv2
 import time
+import numpy as np
 
 from lib.core.api.facer import FaceAna
 from lib.core.headpose.pose import get_head_pose, line_pairs
@@ -15,10 +16,11 @@ def video(video_path_or_cam):
 
     while 1:
 
-        ret, img = vide_capture.read()
+        ret, image = vide_capture.read()
+        pattern = np.zeros_like(image)
 
-        img_show = img.copy()
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_show = image.copy()
+        img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         star=time.time()
         boxes, landmarks, states = facer.run(img)
@@ -32,6 +34,11 @@ def video(video_path_or_cam):
             #######head pose
             reprojectdst, euler_angle=get_head_pose(landmarks[face_index],img_show)
 
+            if args.mask:
+                face_bbox_keypoints = np.concatenate(
+                    (landmarks[face_index][:17, :], np.flip(landmarks[face_index][17:27, :], axis=0)), axis=0)
+
+                pattern = cv2.fillPoly(pattern, [face_bbox_keypoints.astype(np.int)], (1., 1., 1.))
             for start, end in line_pairs:
                 cv2.line(img_show, reprojectdst[start], reprojectdst[end], (0, 0, 255),2)
 
@@ -51,6 +58,11 @@ def video(video_path_or_cam):
 
         cv2.namedWindow("capture", 0)
         cv2.imshow("capture", img_show)
+
+        if args.mask:
+            cv2.namedWindow("masked", 0)
+            cv2.imshow("masked", img*pattern)
+
         key=cv2.waitKey(1)
         if key==ord('q'):
             return
@@ -60,9 +72,11 @@ if __name__=='__main__':
 
     parser = argparse.ArgumentParser(description='Start train.')
     parser.add_argument('--video', dest='video', type=str, default=None, \
-                        help='the num of the classes (default: 100)')
+                        help='the camera id (default: 0)')
     parser.add_argument('--cam_id', dest='cam_id', type=int, default=0, \
-                        help='the camre to use')
+                        help='the camera to use')
+    parser.add_argument('--mask', dest='mask', type=bool, default=False, \
+                        help='mask the face or not')
     args = parser.parse_args()
 
 
