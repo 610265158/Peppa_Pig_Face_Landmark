@@ -18,6 +18,16 @@ click the gif to see the video:
 and with face mask:
 ![face mask](https://github.com/610265158/Peppa_Pig_Face_Engine/blob/master/figure/masked_screenshot_25.09.2019.png)
 
+## requirment
+
++ tensorflow1.12  
+
++ opencv
+
++ python 3.6
+
++ easydict
+
 ## useage
 
 1. download pretrained model, put them into ./model
