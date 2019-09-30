@@ -2,9 +2,10 @@ import cv2
 import numpy as np
 import time
 
-from lib.core.api.face_keypoint import Keypoints
+from lib.core.api.face_landmark import FaceLandmark
 from lib.core.api.face_detector import FaceDetector
 from lib.core.LK.lk import GroupTrack
+
 from config import config as cfg
 
 class FaceAna():
@@ -14,23 +15,27 @@ class FaceAna():
     '''
     def __init__(self):
         self.face_detector = FaceDetector()
-        self.face_landmark =Keypoints()
+        self.face_landmark = FaceLandmark()
         self.trace = GroupTrack()
 
-        self.top_k=cfg.DETECT.topk
 
-        ###another thread should do detector in a slow way and update the track_box
+
+        ###another thread should run detector in a slow way and update the track_box
         self.track_box=None
         self.previous_image=None
         self.previous_box=None
+
         self.diff_thres=5
-
+        self.top_k = cfg.DETECT.topk
         self.iou_thres=cfg.TRACE.iou_thres
-
         self.alpha=cfg.TRACE.smooth_box
+
     def run(self,image):
 
         start = time.time()
+
+
+        ###### run detector
         if self.diff_frames(self.previous_image,image):
             boxes = self.face_detector(image)
             self.previous_image=image
@@ -41,14 +46,16 @@ class FaceAna():
             self.previous_image = image
         print('facebox detect cost',time.time()-start)
 
+
+
         if boxes.shape[0]>self.top_k:
             boxes=self.sort(boxes)
-
 
         boxes_return = np.array(boxes)
 
 
-        landmarks,states=self.face_landmark.run(image,boxes)
+        landmarks,states=self.face_landmark(image,boxes)
+
         landmarks = self.trace.calculate(image, landmarks)
 
         if 1:
@@ -56,9 +63,9 @@ class FaceAna():
             for i in range(landmarks.shape[0]):
                 track.append([np.min(landmarks[i][:,0]),np.min(landmarks[i][:,1]),np.max(landmarks[i][:,0]),np.max(landmarks[i][:,1])])
             tmp_box=np.array(track)
+
             self.track_box = self.judge_boxs(boxes_return, tmp_box)
-        # else:
-        #     self.track_box = self.judge_boxs(boxes_return,)
+
 
         return self.track_box,landmarks,states
 
@@ -70,11 +77,12 @@ class FaceAna():
             _diff = cv2.absdiff(previous_frame, image)
 
             diff=np.sum(_diff)/previous_frame.shape[0]/previous_frame.shape[1]/3.
-            #print(diff)
+
             if diff>self.diff_thres:
                 return True
             else:
                 return False
+
     def sort(self,bboxes):
         if self.top_k >100:
             return bboxes
@@ -89,7 +97,6 @@ class FaceAna():
         picked=area.argsort()[-self.top_k:][::-1]
         sorted_bboxes=[bboxes[x] for x in picked]
         return np.array(sorted_bboxes)
-
 
     def judge_boxs(self,previuous_bboxs,now_bboxs):
         def iou(rec1, rec2):
@@ -111,7 +118,6 @@ class FaceAna():
             intersect =max(0,x2-x1) * max(0,y2-y1)
 
             return intersect / (sum_area - intersect)
-
 
         if previuous_bboxs is None:
             return now_bboxs
@@ -143,5 +149,3 @@ class FaceAna():
 
 
 
-    def reset(self):
-        self.previous_image = None

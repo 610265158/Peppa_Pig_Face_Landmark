@@ -8,8 +8,7 @@ from config import config as cfg
 class FaceDetector:
     def __init__(self):
         """
-        Arguments:
-            model_path: a string, path to a pb file.
+        the model was constructed by the params in config.py
         """
 
         self.model_path=cfg.DETECT.model_path
@@ -35,7 +34,6 @@ class FaceDetector:
         Arguments:
             image: a numpy uint8 array with shape [height, width, 3],
                 that represents a RGB image.
-            score_threshold: a float number.
         Returns:
             boxes: a float numpy array of shape [num_faces, 5].
 
