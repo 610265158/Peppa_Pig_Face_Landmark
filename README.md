@@ -2,6 +2,7 @@
 
 
 ## introduction
+Now tensorflow2.0 was released, and i am working on it, i will coming soon.
 
 Purpose: I want to make a face analyzer including face detect and face alignment. Most of the face keypoints codes that opensourced are neither stable nor smooth, including some research papers. And the commercial sdk is pretty expensive. So, there is **Peppa_Pig_Face_Engine**.  
 
@@ -57,3 +58,7 @@ The project is based on two of my other repos. If you want to train with your ow
 The project is supported by myself, i need your advice to improve it.
 Hope the codes can help you, contact me if u have any question( 2120140200@mail.nankai.edu.cn), and i need your star,also your contribution.
 
+## TODO
+
+- [ ]  Transfer to tensorflow 2.0   ing....
+- [ ]  Add some GAN model to make it fun  ing....
