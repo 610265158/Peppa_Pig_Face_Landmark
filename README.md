@@ -2,7 +2,7 @@
 
 
 ## introduction
-Now tensorflow2.0 was released, and i am working on it, i will coming soon.
+Now tensorflow2.0 was released, and i am working on it, it will coming soon.
 
 Purpose: I want to make a face analyzer including face detect and face alignment. Most of the face keypoints codes that opensourced are neither stable nor smooth, including some research papers. And the commercial sdk is pretty expensive. So, there is **Peppa_Pig_Face_Engine**.  
 
