@@ -82,5 +82,6 @@ At last, i need your star,also your contribution.
 
 - [x]  Transfer to tensorflow 2.0   
 - [ ]  small model 
-- [ ]  Add some GAN model to make it fun  ing....
+- [ ]  Add some GAN model to make it fun ing....
 - [ ]  3-d face algorithm
+- [ ]  maybe a mobile device version, so tired
