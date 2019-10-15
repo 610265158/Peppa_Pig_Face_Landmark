@@ -75,7 +75,7 @@ or you want to know the details about the models, click them.
 The project is supported by myself,
 and i need your advice to improve it.
 Hope the codes can help you, 
-contact me if u have any question( 2120140200@mail.nankai.edu.cn).
+contact me if u have any question.
 At last, i need your star,also your contribution.
 
 ## TODO
