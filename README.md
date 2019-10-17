@@ -20,7 +20,7 @@ and with face mask:
 
 ## requirment
 
-+ tensorflow2.0 
++ tensorflow2.0 （tensorflow1 need to switch to tf1 branch )
 
 + opencv
 
