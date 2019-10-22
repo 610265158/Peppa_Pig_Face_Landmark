@@ -33,7 +33,7 @@ and with face mask:
 1. download pretrained model, put them into ./model
 + detector
 
-   +[baiduyun](https://pan.baidu.com/s/1k2FmEmSS3sQIfEBmdNsr5g&shfl=shareset) (code 1mku )
+   +[baiduyun](https://pan.baidu.com/s/1kkfQ5g-bC0gSbi8UOyRa3A&shfl=shareset) (code 635p )
    
    +[googledrive](https://drive.google.com/open?id=1nOTxc5qnIbwAj45vrncqz9-AUPlMGDaA) 
 + keypoints
