@@ -12,7 +12,7 @@ config.DETECT.model_path='./model/detector'
 config.DETECT.topk=10                              ###max boxes
 config.DETECT.thres=0.5
 config.DETECT.iou_thres=0.3
-config.DETECT.input_shape=(512,512,3)
+config.DETECT.input_shape=(240,320,3)
 
 
 config.KEYPOINTS = edict()

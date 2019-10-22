@@ -33,9 +33,9 @@ and with face mask:
 1. download pretrained model, put them into ./model
 + detector
 
-   +[baiduyun](https://pan.baidu.com/s/14glOjQYRxKL-QPPHl6HRRQ) (code zn3x )
+   +[baiduyun](https://pan.baidu.com/s/1k2FmEmSS3sQIfEBmdNsr5g&shfl=shareset) (code 1mku )
    
-   +[googledrive](https://drive.google.com/open?id=1KO2PuHiBgQEY5uOyLGdFbxBlqPAosY-s) 
+   +[googledrive](https://drive.google.com/open?id=1nOTxc5qnIbwAj45vrncqz9-AUPlMGDaA) 
 + keypoints
 
     +[baiduyun](https://pan.baidu.com/s/1uuPnrF7h228gLLdf2JTqLQ)  (code rt7p)
@@ -67,7 +67,7 @@ The project is based on two of my other repos, and both tensorflow1 and tensorfl
 If you want to train with your own data, 
 or you want to know the details about the models, click them.
 
- + [faceboxes](https://github.com/610265158/faceboxes-tensorflow.git)
+ + [dsfd_light_model](https://github.com/610265158/DSFD-tensorflow)
  + [face_landmark](https://github.com/610265158/face_landmark.git)
 
 
