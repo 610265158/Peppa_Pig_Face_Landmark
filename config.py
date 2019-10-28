@@ -12,7 +12,7 @@ config.DETECT.model_path='./model/detector'
 config.DETECT.topk=10                              ###max boxes
 config.DETECT.thres=0.5
 config.DETECT.iou_thres=0.3
-config.DETECT.input_shape=(240,320,3)
+config.DETECT.input_shape=(256,320,3)
 
 
 config.KEYPOINTS = edict()
@@ -29,7 +29,7 @@ config.TRACE.smooth_landmark=0.95
 config.TRACE.iou_thres=0.5
 
 config.DATA = edict()
-config.DATA.pixel_means = np.array([123., 116., 103.]) # RGB
+config.DATA.pixel_means = np.array([127., 127., 127.]) # RGB
 
 
 

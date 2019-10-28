@@ -146,6 +146,9 @@ class FaceAna():
         return p
 
 
-
+    def reset(self):
+        self.track_box = None
+        self.previous_image = None
+        self.previous_box = None
 
 
