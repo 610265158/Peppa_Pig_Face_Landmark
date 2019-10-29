@@ -38,9 +38,15 @@ and with face mask:
    +[googledrive](https://drive.google.com/open?id=1nOTxc5qnIbwAj45vrncqz9-AUPlMGDaA) 
 + keypoints
 
+      shufflenetv2_1.0 
     +[baiduyun](https://pan.baidu.com/s/1uuPnrF7h228gLLdf2JTqLQ)  (code rt7p)
     
     +[googledrive](https://drive.google.com/open?id=1Zy5hG7AL69zym4EGwkprW9INnj_5P9a0)
+
+      shufflenetv2_0.75   including tflite model, 
+    + [baidu disk](https://pan.baidu.com/s/1JxZ9nhFpWCAv5A44yUEcOA)  (code fcdc)
+    + [google drive](https://drive.google.com/open?id=1VAJ8qObyRfLmpimoZA6QwrhXjQmgwBXn)
+
 
     the dir structure as :
     ```
