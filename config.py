@@ -23,9 +23,10 @@ config.KEYPOINTS.base_extend_range=[0.2,0.3]
 config.KEYPOINTS.input_shape = (160,160,3)  # input size during training , 240
 
 config.TRACE= edict()
+config.TRACE.ema_or_one_euro='euro'
 config.TRACE.pixel_thres=1
 config.TRACE.smooth_box=0.3
-config.TRACE.smooth_landmark=0.95
+config.TRACE.smooth_landmark=0.95            ## if use euro, this will be disable
 config.TRACE.iou_thres=0.5
 
 config.DATA = edict()
