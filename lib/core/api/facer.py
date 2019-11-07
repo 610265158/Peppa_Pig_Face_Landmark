@@ -4,7 +4,7 @@ import time
 
 from lib.core.api.face_landmark import FaceLandmark
 from lib.core.api.face_detector import FaceDetector
-from lib.core.LK.lk import GroupTrack
+from lib.core.LK.lk import GroupTrack,OneEuroFilter,EmaFilter
 
 from config import config as cfg
 
@@ -31,6 +31,11 @@ class FaceAna():
         self.top_k = cfg.DETECT.topk
         self.iou_thres=cfg.TRACE.iou_thres
         self.alpha=cfg.TRACE.smooth_box
+
+        if 'ema' in cfg.TRACE.ema_or_one_euro:
+            self.filter = EmaFilter(self.alpha)
+        else:
+            self.filter = OneEuroFilter()
 
     def run(self,image):
 
@@ -139,11 +144,7 @@ class FaceAna():
 
     def smooth(self,now_box,previous_box):
 
-        return self.do_moving_average(now_box[:4], previous_box[:4])
-
-    def do_moving_average(self,p_now,p_previous):
-        p=self.alpha*p_now+(1-self.alpha)*p_previous
-        return p
+        return self.filter(now_box[:4], previous_box[:4])
 
 
     def reset(self):
