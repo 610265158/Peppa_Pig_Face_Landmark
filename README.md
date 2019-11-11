@@ -31,11 +31,11 @@ and with face mask:
 ## useage
 
 1. download pretrained model, put them into ./model
-+ detector
++ detector  including a tflite model
 
-   +[baiduyun](https://pan.baidu.com/s/19myMFdHzQsr-oUhj45yYlg&shfl=shareset) (code kif9 )
+   +[baiduyun](https://pan.baidu.com/s/12uWvuxMSTBro2_U2uPCRdg) ( password 2eai )
    
-   +[googledrive](https://drive.google.com/open?id=1nOTxc5qnIbwAj45vrncqz9-AUPlMGDaA) 
+   +[googledrive](https://drive.google.com/open?id=1wx9SPk03tbzlCSc8H_mivLDYSIW12-nC)
 + keypoints
 
       shufflenetv2_1.0 
@@ -43,7 +43,7 @@ and with face mask:
     
     +[googledrive](https://drive.google.com/open?id=1Zy5hG7AL69zym4EGwkprW9INnj_5P9a0)
 
-      shufflenetv2_0.75   including tflite model, 
+      shufflenetv2_0.75   including tflite model,  (time cost: mac i5-8279U@2.4GHz， tf2.0 5ms+， tflite 3.7ms+-)
     + [baidu disk](https://pan.baidu.com/s/1JxZ9nhFpWCAv5A44yUEcOA)  (code fcdc)
     + [google drive](https://drive.google.com/open?id=1VAJ8qObyRfLmpimoZA6QwrhXjQmgwBXn)
 
@@ -74,7 +74,7 @@ The project is based on two of my other repos, and both tensorflow1 and tensorfl
 If you want to train with your own data, 
 or you want to know the details about the models, click them.
 
- + [dsfd_light_model](https://github.com/610265158/DSFD-tensorflow)
+ + [dsfd_light_model](https://github.com/610265158/DSFD-tensorflow)  **tf2 branch**
  + [face_landmark](https://github.com/610265158/face_landmark.git)
 
 
