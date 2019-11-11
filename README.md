@@ -31,19 +31,16 @@ and with face mask:
 ## useage
 
 1. download pretrained model, put them into ./model
-+ detector  including a tflite model
++ detector  
 
-   +[baiduyun](https://pan.baidu.com/s/12uWvuxMSTBro2_U2uPCRdg) ( password 2eai )
+    lightnet, including a tflite model
+   + [baiduyun](https://pan.baidu.com/s/12uWvuxMSTBro2_U2uPCRdg) ( password 2eai )
+   + [googledrive](https://drive.google.com/open?id=1wx9SPk03tbzlCSc8H_mivLDYSIW12-nC)
    
-   +[googledrive](https://drive.google.com/open?id=1wx9SPk03tbzlCSc8H_mivLDYSIW12-nC)
 + keypoints
 
-      shufflenetv2_1.0 
-    +[baiduyun](https://pan.baidu.com/s/1uuPnrF7h228gLLdf2JTqLQ)  (code rt7p)
-    
-    +[googledrive](https://drive.google.com/open?id=1Zy5hG7AL69zym4EGwkprW9INnj_5P9a0)
-
-      shufflenetv2_0.75   including tflite model,  (time cost: mac i5-8279U@2.4GHz， tf2.0 5ms+， tflite 3.7ms+-)
+      shufflenetv2_0.75   including tflite model, 
+       (time cost: mac i5-8279U@2.4GHz， tf2.0 5ms+， tflite 3.7ms+-)
     + [baidu disk](https://pan.baidu.com/s/1JxZ9nhFpWCAv5A44yUEcOA)  (code fcdc)
     + [google drive](https://drive.google.com/open?id=1VAJ8qObyRfLmpimoZA6QwrhXjQmgwBXn)
 
