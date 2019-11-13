@@ -15,6 +15,12 @@ class GroupTrack():
         self.alpha=cfg.TRACE.smooth_landmark
         self.iou_thres=cfg.TRACE.iou_thres
 
+        if 'ema' in cfg.TRACE.ema_or_one_euro:
+            self.filter=EmaFilter(self.alpha)
+        else:
+            self.filter=OneEuroFilter()
+
+
     def calculate(self, img, now_landmarks_set):
 
         if self.previous_landmarks_set is None or self.previous_landmarks_set.shape[0]==0:
@@ -79,11 +85,80 @@ class GroupTrack():
             if dis < self.thres:
                 result.append(previous_landmarks[i])
             else:
-                result.append(self.do_moving_average(now_landmarks[i], previous_landmarks[i]))
+                result.append(self.filter(now_landmarks[i], previous_landmarks[i]))
 
         return np.array(result)
-    def do_moving_average(self,p_now,p_previous):
-        p=self.alpha*p_now+(1-self.alpha)*p_previous
+
+
+    def do_moving_average(self, p_now, p_previous):
+        p = self.alpha * p_now + (1 - self.alpha) * p_previous
         return p
 
+
+import math
+
+
+def smoothing_factor(t_e, cutoff):
+    r = 2 * math.pi * cutoff * t_e
+    return r / (r + 1)
+
+
+def exponential_smoothing(a, x, x_prev):
+    return a * x + (1 - a) * x_prev
+
+
+class OneEuroFilter:
+    def __init__(self, dx0=0.0, min_cutoff=1.0, beta=0.0,
+                 d_cutoff=1.0):
+        """Initialize the one euro filter."""
+        # The parameters.
+        self.min_cutoff = float(min_cutoff)
+        self.beta = float(beta)
+        self.d_cutoff = float(d_cutoff)
+        # Previous values.
+
+        self.dx_prev = float(dx0)
+        #self.t_prev = float(t0)
+
+    def __call__(self, x,x_prev):
+
+        if x_prev is None:
+
+            return x
+
+
+
+
+        """Compute the filtered signal."""
+        t_e = 1
+
+        # The filtered derivative of the signal.
+        a_d = smoothing_factor(t_e, self.d_cutoff)
+        dx = (x - x_prev) / t_e
+        dx_hat = exponential_smoothing(a_d, dx, self.dx_prev)
+
+        # The filtered signal.
+        cutoff = self.min_cutoff + self.beta * abs(dx_hat)
+        a = smoothing_factor(t_e, cutoff)
+        x_hat = exponential_smoothing(a, x, x_prev)
+
+        # Memorize the previous values.
+
+        self.dx_prev = dx_hat
+
+
+        return x_hat
+
+
+
+
+
+class EmaFilter():
+    def __init__(self,alpha):
+        self.alpha=alpha
+
+    def __call__(self,p_now,p_previous ):
+        p=exponential_smoothing(self.alpha,p_now,p_previous)
+
+        return p
 

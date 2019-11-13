@@ -12,7 +12,7 @@ config.DETECT.model_path='./model/detector'
 config.DETECT.topk=10                              ###max boxes
 config.DETECT.thres=0.5
 config.DETECT.iou_thres=0.3
-config.DETECT.input_shape=(512,512,3)
+config.DETECT.input_shape=(256,320,3)
 
 
 config.KEYPOINTS = edict()
@@ -23,13 +23,14 @@ config.KEYPOINTS.base_extend_range=[0.2,0.3]
 config.KEYPOINTS.input_shape = (160,160,3)  # input size during training , 240
 
 config.TRACE= edict()
+config.TRACE.ema_or_one_euro='euro'
 config.TRACE.pixel_thres=1
-config.TRACE.smooth_box=0.3
-config.TRACE.smooth_landmark=0.95
+config.TRACE.smooth_box=0.3                  ## if use euro, this will be disable
+config.TRACE.smooth_landmark=0.95            ## if use euro, this will be disable
 config.TRACE.iou_thres=0.5
 
 config.DATA = edict()
-config.DATA.pixel_means = np.array([123., 116., 103.]) # RGB
+config.DATA.pixel_means = np.array([127., 127., 127.]) # RGB
 
 
 

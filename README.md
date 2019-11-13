@@ -31,16 +31,19 @@ and with face mask:
 ## useage
 
 1. download pretrained model, put them into ./model
-+ detector
++ detector  
 
-   +[baiduyun](https://pan.baidu.com/s/14glOjQYRxKL-QPPHl6HRRQ) (code zn3x )
+    lightnet, including a tflite model
+    + [baidu disk](https://pan.baidu.com/s/12uWvuxMSTBro2_U2uPCRdg) ( password 2eai )
+    + [google drive](https://drive.google.com/open?id=1tPth2oqDUvfA66q3DruTAXXLoJid8aag)
    
-   +[googledrive](https://drive.google.com/open?id=1KO2PuHiBgQEY5uOyLGdFbxBlqPAosY-s) 
 + keypoints
 
-    +[baiduyun](https://pan.baidu.com/s/1uuPnrF7h228gLLdf2JTqLQ)  (code rt7p)
-    
-    +[googledrive](https://drive.google.com/open?id=1Zy5hG7AL69zym4EGwkprW9INnj_5P9a0)
+      shufflenetv2_0.75   including tflite model, 
+       (time cost: mac i5-8279U@2.4GHz， tf2.0 5ms+， tflite 3.7ms+-)
+    + [baidu disk](https://pan.baidu.com/s/1JxZ9nhFpWCAv5A44yUEcOA)  (code fcdc)
+    + [google drive](https://drive.google.com/open?id=1VAJ8qObyRfLmpimoZA6QwrhXjQmgwBXn)
+
 
     the dir structure as :
     ```
@@ -57,8 +60,9 @@ and with face mask:
             ├── variables.data-00001-of-00002
             └── variables.index
     ```
-2. run `python demo.py --cam_id 0`    
-   or  `python demo.py --video test.mp4`     
+2. run `python demo.py --cam_id 0` use a camera    
+   or  `python demo.py --video test.mp4`  detect for a video    
+   or  `python demo.py --img_dir ./test`  detect for images dir no track   
    or `python demo.py --video test.mp4 --mask True` if u want a face mask
     
 
@@ -67,7 +71,7 @@ The project is based on two of my other repos, and both tensorflow1 and tensorfl
 If you want to train with your own data, 
 or you want to know the details about the models, click them.
 
- + [faceboxes](https://github.com/610265158/faceboxes-tensorflow.git)
+ + [dsfd_light_model](https://github.com/610265158/DSFD-tensorflow)  **tf2 branch**
  + [face_landmark](https://github.com/610265158/face_landmark.git)
 
 
@@ -81,7 +85,7 @@ At last, i need your star,also your contribution.
 ## TODO
 
 - [x]  Transfer to tensorflow 2.0   
-- [ ]  small model 
+- [x]  small model including tflite
 - [ ]  Add some GAN model to make it fun ing....
 - [ ]  3-d face algorithm
 - [ ]  maybe a mobile device version, so tired
