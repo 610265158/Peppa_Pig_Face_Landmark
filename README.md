@@ -34,6 +34,7 @@ and with face mask:
 + detector  
 
     lightnet, including a tflite model
+    (time cost: mac i5-8279U@2.4GHz， tf2.0 10ms+(?)， tflite not test)
     + [baidu disk](https://pan.baidu.com/s/12uWvuxMSTBro2_U2uPCRdg) ( password 2eai )
     + [google drive](https://drive.google.com/open?id=1tPth2oqDUvfA66q3DruTAXXLoJid8aag)
    
