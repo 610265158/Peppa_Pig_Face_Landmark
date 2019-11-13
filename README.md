@@ -34,8 +34,8 @@ and with face mask:
 + detector  
 
     lightnet, including a tflite model
-   + [baiduyun](https://pan.baidu.com/s/12uWvuxMSTBro2_U2uPCRdg) ( password 2eai )
-   + [googledrive](https://drive.google.com/open?id=1wx9SPk03tbzlCSc8H_mivLDYSIW12-nC)
+    + [baidu disk](https://pan.baidu.com/s/12uWvuxMSTBro2_U2uPCRdg) ( password 2eai )
+    + [google drive](https://drive.google.com/open?id=1tPth2oqDUvfA66q3DruTAXXLoJid8aag)
    
 + keypoints
 
@@ -85,7 +85,7 @@ At last, i need your star,also your contribution.
 ## TODO
 
 - [x]  Transfer to tensorflow 2.0   
-- [ ]  small model 
+- [x]  small model including tflite
 - [ ]  Add some GAN model to make it fun ing....
 - [ ]  3-d face algorithm
 - [ ]  maybe a mobile device version, so tired
