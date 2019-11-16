@@ -34,14 +34,14 @@ and with face mask:
 + detector  
 
         Lightnet_0.5  including tflite model, 
-        (time cost: mac i5-8279U@2.4GHz， tf2.0 15ms+， tflite 8ms+-,input shape 320x320)
+        (time cost: mac i5-8279U@2.4GHz， tf2.0 15ms+， tflite 8ms+-,input shape 320x320, model size 580K)
     + [baidu disk](https://pan.baidu.com/s/1ZJZHJz8VFXahmwBptGQfiA) ( password yqst )
     + [google drive](https://drive.google.com/open?id=1ZZVA7QhwGWYJ-09KoU2iym90zqbrfTQH)
    
 + keypoints
 
       shufflenetv2_0.75   including tflite model, 
-       (time cost: mac i5-8279U@2.4GHz， tf2.0 5ms+， tflite 3.7ms+-)
+       (time cost: mac i5-8279U@2.4GHz， tf2.0 5ms+， tflite 3.7ms+- model size 2.5M)
     + [baidu disk](https://pan.baidu.com/s/1JxZ9nhFpWCAv5A44yUEcOA)  (code fcdc)
     + [google drive](https://drive.google.com/open?id=1VAJ8qObyRfLmpimoZA6QwrhXjQmgwBXn)
 
