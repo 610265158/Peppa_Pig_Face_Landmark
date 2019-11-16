@@ -33,10 +33,10 @@ and with face mask:
 1. download pretrained model, put them into ./model
 + detector  
 
-        lightnet, including a tflite model, 800KB
-        (time cost: mac i5-8279U@2.4GHz， tf2.0 10ms+(?)， tflite not test)
-    + [baidu disk](https://pan.baidu.com/s/12uWvuxMSTBro2_U2uPCRdg) ( password 2eai )
-    + [google drive](https://drive.google.com/open?id=1wx9SPk03tbzlCSc8H_mivLDYSIW12-nC)
+        Lightnet_0.5  including tflite model, 
+        (time cost: mac i5-8279U@2.4GHz， tf2.0 15ms+， tflite 8ms+-,input shape 320x320)
+    + [baidu disk](https://pan.baidu.com/s/1ZJZHJz8VFXahmwBptGQfiA) ( password yqst )
+    + [google drive](https://drive.google.com/open?id=1ZZVA7QhwGWYJ-09KoU2iym90zqbrfTQH)
    
 + keypoints
 
