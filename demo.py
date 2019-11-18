@@ -34,8 +34,8 @@ def video(video_path_or_cam):
 
         for face_index in range(landmarks.shape[0]):
 
-            #######head pose
-            reprojectdst, euler_angle=get_head_pose(landmarks[face_index],img_show)
+            #######head pose need develop
+            #reprojectdst, euler_angle=get_head_pose(landmarks[face_index],img_show)
 
             if args.mask:
                 face_bbox_keypoints = np.concatenate(
@@ -44,15 +44,15 @@ def video(video_path_or_cam):
                 pattern = cv2.fillPoly(pattern, [face_bbox_keypoints.astype(np.int)], (1., 1., 1.))
 
 
-            for start, end in line_pairs:
-                cv2.line(img_show, reprojectdst[start], reprojectdst[end], (0, 0, 255),2)
-
-            cv2.putText(img_show, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.75, (0, 0, 0), thickness=2)
-            cv2.putText(img_show, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.75, (0, 0, 0), thickness=2)
-            cv2.putText(img_show, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.75, (0, 0, 0), thickness=2)
+            # for start, end in line_pairs:
+            #     cv2.line(img_show, reprojectdst[start], reprojectdst[end], (0, 0, 255),2)
+            #
+            # cv2.putText(img_show, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX,
+            #             0.75, (0, 0, 0), thickness=2)
+            # cv2.putText(img_show, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50), cv2.FONT_HERSHEY_SIMPLEX,
+            #             0.75, (0, 0, 0), thickness=2)
+            # cv2.putText(img_show, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
+            #             0.75, (0, 0, 0), thickness=2)
 
             for landmarks_index in range(landmarks[face_index].shape[0]):
 
@@ -105,7 +105,7 @@ def images(image_dir):
         for face_index in range(landmarks.shape[0]):
 
             #######head pose
-            reprojectdst, euler_angle=get_head_pose(landmarks[face_index],img_show)
+            #reprojectdst, euler_angle=get_head_pose(landmarks[face_index],img_show)
 
             if args.mask:
                 face_bbox_keypoints = np.concatenate(
@@ -114,15 +114,15 @@ def images(image_dir):
                 pattern = cv2.fillPoly(pattern, [face_bbox_keypoints.astype(np.int)], (1., 1., 1.))
 
 
-            for start, end in line_pairs:
-                cv2.line(img_show, reprojectdst[start], reprojectdst[end], (0, 0, 255),2)
-
-            cv2.putText(img_show, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.75, (0, 0, 0), thickness=2)
-            cv2.putText(img_show, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.75, (0, 0, 0), thickness=2)
-            cv2.putText(img_show, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.75, (0, 0, 0), thickness=2)
+            # for start, end in line_pairs:
+            #     cv2.line(img_show, reprojectdst[start], reprojectdst[end], (0, 0, 255),2)
+            #
+            # cv2.putText(img_show, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX,
+            #             0.75, (0, 0, 0), thickness=2)
+            # cv2.putText(img_show, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50), cv2.FONT_HERSHEY_SIMPLEX,
+            #             0.75, (0, 0, 0), thickness=2)
+            # cv2.putText(img_show, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
+            #             0.75, (0, 0, 0), thickness=2)
 
             for landmarks_index in range(landmarks[face_index].shape[0]):
 

@@ -17,8 +17,19 @@ class FaceLandmark:
         self.model_path = cfg.KEYPOINTS.model_path
         self.min_face = 20
         self.keypoints_num = cfg.KEYPOINTS.p_num
-        logger.info('INIT THE FACELANDMARK MODEL...')
-        self.model = tf.saved_model.load(cfg.KEYPOINTS.model_path)
+
+
+        if 'lite' in self.model_path:
+            self.model = tf.lite.Interpreter(model_path=self.model_path)
+            self.model.allocate_tensors()
+            self.input_details = self.model.get_input_details()
+            self.output_details = self.model.get_output_details()
+            self.tflite=True
+        else:
+            self.model = tf.saved_model.load(self.model_path)
+
+            self.tflite = False
+
 
     ##below are the method  run for one by one, will be deprecated in the future
     def __call__(self, img, bboxes):
@@ -117,12 +128,21 @@ class FaceLandmark:
             return np.array([]), np.array([])
 
         images_batched, details_batched = self.batch_preprocess(image, bboxes)
+        if not self.tflite:
+            res = self.model.inference(images_batched)
 
-        res = self.model.inference(images_batched)
+            ##reshape it as [n,keypoint_num,2]
+            landmark = res['landmark'].numpy().reshape((-1, self.keypoints_num, 2))
+            states = res['cls'].numpy()
+        else:
 
-        ##reshape it as [n,keypoint_num,2]
-        landmark = res['landmark'].numpy().reshape((-1, self.keypoints_num, 2))
-        states = res['cls'].numpy()
+            images_batched=images_batched.astype(np.float32)
+            self.model.set_tensor(self.input_details[0]['index'], images_batched)
+            self.model.invoke()
+
+            landmark = self.model.get_tensor(self.output_details[2]['index']).reshape((-1, self.keypoints_num, 2))
+            states = self.model.get_tensor(self.output_details[0]['index'])
+
 
         landmark = self.batch_postprocess(landmark, details_batched)
 

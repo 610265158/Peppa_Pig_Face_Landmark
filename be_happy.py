@@ -22,7 +22,7 @@ def video(video_path_or_cam):
 
 
         ret, image = vide_capture.read()
-        #image = image[100:1000, :, :]
+
         image=cv2.resize(image, None, fx=2., fy=2.)
         pattern = np.zeros_like(image)
 
@@ -39,22 +39,22 @@ def video(video_path_or_cam):
         for face_index in range(landmarks.shape[0]):
 
             #######head pose
-            reprojectdst, euler_angle=get_head_pose(landmarks[face_index],img_show)
+            #reprojectdst, euler_angle=get_head_pose(landmarks[face_index],img_show)
 
             if args.mask:
                 face_bbox_keypoints = np.concatenate(
                     (landmarks[face_index][:17, :], np.flip(landmarks[face_index][17:27, :], axis=0)), axis=0)
 
                 pattern = cv2.fillPoly(pattern, [face_bbox_keypoints.astype(np.int)], (1., 1., 1.))
-            for start, end in line_pairs:
-                cv2.line(img_show, reprojectdst[start], reprojectdst[end], (0, 0, 255),2)
-
-            cv2.putText(img_show, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.75, (0, 0, 0), thickness=2)
-            cv2.putText(img_show, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.75, (0, 0, 0), thickness=2)
-            cv2.putText(img_show, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.75, (0, 0, 0), thickness=2)
+            # for start, end in line_pairs:
+            #     cv2.line(img_show, reprojectdst[start], reprojectdst[end], (0, 0, 255),2)
+            #
+            # cv2.putText(img_show, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX,
+            #             0.75, (0, 0, 0), thickness=2)
+            # cv2.putText(img_show, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50), cv2.FONT_HERSHEY_SIMPLEX,
+            #             0.75, (0, 0, 0), thickness=2)
+            # cv2.putText(img_show, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
+            #             0.75, (0, 0, 0), thickness=2)
 
             for landmarks_index in range(landmarks[face_index].shape[0]):
 

@@ -1,9 +1,7 @@
 #-*-coding:utf-8-*-
-
-
 from config import config as cfg
 import numpy as np
-
+import math
 
 class GroupTrack():
     def __init__(self):
@@ -95,7 +93,6 @@ class GroupTrack():
         return p
 
 
-import math
 
 
 def smoothing_factor(t_e, cutoff):

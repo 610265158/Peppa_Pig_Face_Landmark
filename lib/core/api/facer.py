@@ -39,8 +39,6 @@ class FaceAna():
 
     def run(self,image):
 
-        start = time.time()
-
         ###### run detector
         if self.diff_frames(self.previous_image,image):
             boxes = self.face_detector(image)
@@ -50,8 +48,6 @@ class FaceAna():
         else:
             boxes=self.track_box
             self.previous_image = image
-        #print('facebox detect cost',time.time()-start)
-
 
 
         if boxes.shape[0]>self.top_k:
@@ -59,22 +55,35 @@ class FaceAna():
 
         boxes_return = np.array(boxes)
 
+
+        #### batch predict for face landmark
         landmarks,states=self.face_landmark.batch_call(image,boxes)
 
+
+        #### calculate the headpose for the whole image
         landmarks = self.trace.calculate(image, landmarks)
 
-        if 1:
-            track=[]
-            for i in range(landmarks.shape[0]):
-                track.append([np.min(landmarks[i][:,0]),np.min(landmarks[i][:,1]),np.max(landmarks[i][:,0]),np.max(landmarks[i][:,1])])
-            tmp_box=np.array(track)
 
-            self.track_box = self.judge_boxs(boxes_return, tmp_box)
+        #### refine the bboxes
+        track=[]
+        for i in range(landmarks.shape[0]):
+            track.append([np.min(landmarks[i][:,0]),np.min(landmarks[i][:,1]),np.max(landmarks[i][:,0]),np.max(landmarks[i][:,1])])
+        tmp_box=np.array(track)
+
+        self.track_box = self.judge_boxs(boxes_return, tmp_box)
 
 
         return self.track_box,landmarks,states
 
     def diff_frames(self,previous_frame,image):
+        '''
+        diff value for two value,
+        determin if to excute the detection
+
+        :param previous_frame:  RGB  array
+        :param image:           RGB  array
+        :return:                True or False
+        '''
         if previous_frame is None:
             return True
         else:
@@ -89,6 +98,11 @@ class FaceAna():
                 return False
 
     def sort(self,bboxes):
+        '''
+        find the top_k max bboxes
+        :param bboxes:
+        :return:
+        '''
         if self.top_k >100:
             return bboxes
         area=[]
@@ -104,7 +118,15 @@ class FaceAna():
         return np.array(sorted_bboxes)
 
     def judge_boxs(self,previuous_bboxs,now_bboxs):
+        '''
+        function used to calculate the tracking bboxes
+
+        :param previuous_bboxs:[[x1,y1,x2,y2],... ]
+        :param now_bboxs: [[x1,y1,x2,y2],... ]
+        :return:
+        '''
         def iou(rec1, rec2):
+
 
             # computing area of each rectangles
             S_rec1 = (rec1[2] - rec1[0]) * (rec1[3] - rec1[1])
@@ -147,7 +169,16 @@ class FaceAna():
         return self.filter(now_box[:4], previous_box[:4])
 
 
+
+
+
+
     def reset(self):
+        '''
+        reset the previous info used foe tracking,
+
+        :return:
+        '''
         self.track_box = None
         self.previous_image = None
         self.previous_box = None

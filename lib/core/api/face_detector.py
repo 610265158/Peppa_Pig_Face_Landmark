@@ -5,8 +5,6 @@ import math
 import time
 
 from config import config as cfg
-from lib.logger.logger import logger
-
 
 class FaceDetector:
     def __init__(self):
@@ -17,8 +15,20 @@ class FaceDetector:
         self.model_path=cfg.DETECT.model_path
         self.thres=cfg.DETECT.thres
         self.input_shape=cfg.DETECT.input_shape
-        logger.info('INIT THE FACELANDMARK MODEL...')
-        self.model =tf.saved_model.load(cfg.DETECT.model_path)
+
+
+
+        if 'lite' in self.model_path:
+            self.model = tf.lite.Interpreter(model_path=self.model_path)
+            self.model.allocate_tensors()
+            self.input_details = self.model.get_input_details()
+            self.output_details = self.model.get_output_details()
+            self.tflite=True
+        else:
+            self.model = tf.saved_model.load(self.model_path)
+
+            self.tflite = False
+
 
     def __call__(self, image,
                  score_threshold=cfg.DETECT.thres,
@@ -36,49 +46,67 @@ class FaceDetector:
             boxes: a float numpy array of shape [num_faces, 5].
 
         """
+        if not self.tflite:
+            if input_shape is None:
+                h,w,c=image.shape
+                input_shape = (math.ceil(h / 64 ) * 64,
+                               math.ceil(w / 64 ) * 64)
+            else:
+                h, w = input_shape
+                input_shape = (math.ceil(h / 64 ) * 64,
+                               math.ceil(w / 64 ) * 64)
 
-        if input_shape is None:
-            h,w,c=image.shape
-            input_shape = (math.ceil(h / 64 ) * 64, math.ceil(w / 64 ) * 64)
+            image_fornet, scale_x, scale_y,dx,dy = self.preprocess(image,
+                                                                   target_height=input_shape[0],
+                                                                   target_width =input_shape[1])
+
+            image_fornet = np.expand_dims(image_fornet, 0)
+
+            start = time.time()
+            bboxes = self.model.inference(image_fornet)
+            print('xx', time.time() - start)
         else:
-            h, w = input_shape
-            input_shape = (math.ceil(h / 64 ) * 64, math.ceil(w / 64 ) * 64)
+            input_shape = (320, 320)
+            image_fornet, scale_x, scale_y, dx, dy = self.preprocess(image,
+                                                                     target_height=input_shape[0],
+                                                                     target_width=input_shape[1])
 
-        image_fornet, scale_x, scale_y,dx,dy = self.preprocess(image,
-                                                         target_height=input_shape[0],
-                                                         target_width =input_shape[1])
+            image_fornet = np.expand_dims(image_fornet, 0).astype(np.float32)
 
-        image_fornet = np.expand_dims(image_fornet, 0)
+            start = time.time()
+            self.model.set_tensor(self.input_details[0]['index'], image_fornet)
 
-        start = time.time()
-        bboxes = self.model.inference(image_fornet)
-        print('xx', time.time() - start)
+            self.model.invoke()
+
+            bboxes = self.model.get_tensor(self.output_details[0]['index'])
+
+            print('xx', time.time() - start)
 
         bboxes=self.py_nms(np.array(bboxes[0]),iou_thres=iou_threshold,score_thres=score_threshold)
 
         ###recorver to raw image
-        boxes_scaler = np.array([(input_shape[1]) / scale_x,
-                           (input_shape[0]) / scale_y,
-                           (input_shape[1]) / scale_x,
-                           (input_shape[0]) / scale_y,1.], dtype='float32')
+        boxes_scaler = np.array([  (input_shape[1]) / scale_x,
+                                   (input_shape[0]) / scale_y,
+                                   (input_shape[1]) / scale_x,
+                                   (input_shape[0]) / scale_y,
+                                    1.], dtype='float32')
 
-        boxes_bias=np.array([dx / scale_x,
-                           dy / scale_y,
-                           dx / scale_x,
-                           dy / scale_y,0.], dtype='float32')
+        boxes_bias=np.array( [ dx / scale_x,
+                               dy / scale_y,
+                               dx / scale_x,
+                               dy / scale_y,
+                               0.], dtype='float32')
         bboxes = bboxes * boxes_scaler-boxes_bias
 
         return bboxes
 
 
-    def preprocess(self, image, target_height, target_width, label=None):
+    def preprocess(self, image, target_height, target_width):
 
-        ###sometimes use in objs detects
         h, w, c = image.shape
 
         bimage = np.zeros(shape=[target_height, target_width, c], dtype=image.dtype) + np.array(cfg.DATA.pixel_means,
                                                                                                 dtype=image.dtype)
-
         scale_y = target_height / h
         scale_x = target_width / w
 
