@@ -50,7 +50,7 @@ class FaceAna():
         else:
             boxes=self.track_box
             self.previous_image = image
-        print('facebox detect cost',time.time()-start)
+        #print('facebox detect cost',time.time()-start)
 
 
 
