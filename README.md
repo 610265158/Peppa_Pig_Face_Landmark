@@ -48,18 +48,21 @@ and with face mask:
 
     the dir structure as :
     ```
-    ./model/
-    ├── detector
-    │   ├── saved_model.pb
-    │   └── variables
-    │       ├── variables.data-00000-of-00001
-    │       └── variables.index
-    └── keypoints
-        ├── saved_model.pb
-        └── variables
-            ├── variables.data-00000-of-00002
-            ├── variables.data-00001-of-00002
-            └── variables.index
+       ./model
+       ├── detector
+       │   ├── saved_model.pb
+       │   └── variables
+       │       ├── variables.data-00000-of-00002
+       │       ├── variables.data-00001-of-00002
+       │       └── variables.index
+       ├── detector.tflite
+       ├── keypoints
+       │   ├── saved_model.pb
+       │   └── variables
+       │       ├── variables.data-00000-of-00002
+       │       ├── variables.data-00001-of-00002
+       │       └── variables.index
+       └── keypoints.tflite
     ```
 2. run `python demo.py --cam_id 0` use a camera    
    or  `python demo.py --video test.mp4`  detect for a video    
