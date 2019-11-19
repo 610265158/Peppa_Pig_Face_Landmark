@@ -29,6 +29,7 @@ class FaceAna():
 
         self.diff_thres=5
         self.top_k = cfg.DETECT.topk
+        self.min_face=cfg.DETECT.min_face
         self.iou_thres=cfg.TRACE.iou_thres
         self.alpha=cfg.TRACE.smooth_box
 
@@ -50,8 +51,8 @@ class FaceAna():
             self.previous_image = image
 
 
-        if boxes.shape[0]>self.top_k:
-            boxes=self.sort(boxes)
+
+        boxes=self.sort_and_filter(boxes)
 
         boxes_return = np.array(boxes)
 
@@ -97,24 +98,28 @@ class FaceAna():
             else:
                 return False
 
-    def sort(self,bboxes):
+    def sort_and_filter(self,bboxes):
         '''
-        find the top_k max bboxes
+        find the top_k max bboxes, and filter the small face
+
         :param bboxes:
         :return:
         '''
-        if self.top_k >100:
-            return bboxes
-        area=[]
-        for bbox in bboxes:
 
-            bbox_width = bbox[2] - bbox[0]
-            bbox_height = bbox[3] - bbox[1]
-            area.append(bbox_height*bbox_width)
-        area=np.array(area)
+        if len(bboxes)<1:
+            return []
 
-        picked=area.argsort()[-self.top_k:][::-1]
-        sorted_bboxes=[bboxes[x] for x in picked]
+
+        area=(bboxes[:,2]-bboxes[:,0])*(bboxes[:,3]-bboxes[:,1])
+        select_index=area>self.min_face
+
+        area=area[select_index]
+        bboxes=bboxes[select_index,:]
+        if bboxes.shape[0]>self.top_k:
+            picked=area.argsort()[-self.top_k:][::-1]
+            sorted_bboxes=[bboxes[x] for x in picked]
+        else:
+            sorted_bboxes=bboxes
         return np.array(sorted_bboxes)
 
     def judge_boxs(self,previuous_bboxs,now_bboxs):

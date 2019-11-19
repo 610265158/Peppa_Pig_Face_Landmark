@@ -9,10 +9,11 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"           ### if to use cuda,
 
 config.DETECT = edict()
 config.DETECT.model_path='./model/detector'         ### saved_model or tflite
-config.DETECT.topk=10                               ###max boxes
-config.DETECT.thres=0.5                             ###thres for nms
-config.DETECT.iou_thres=0.3                         ###iou thres for nms
-config.DETECT.input_shape=(256,320,3)               ###input shape for detector
+config.DETECT.topk=10                               ### max boxes
+config.DETECT.min_face=1600                         ### max boxes
+config.DETECT.thres=0.5                             ### thres for nms
+config.DETECT.iou_thres=0.3                         ### iou thres for nms
+config.DETECT.input_shape=(256,320,3)               ### input shape for detector
 
 
 config.KEYPOINTS = edict()
@@ -25,8 +26,8 @@ config.KEYPOINTS.input_shape = (160,160,3)          # input size during training
 config.TRACE= edict()
 config.TRACE.ema_or_one_euro='euro'                 ### post process
 config.TRACE.pixel_thres=1
-config.TRACE.smooth_box=0.3                  ## if use euro, this will be disable
-config.TRACE.smooth_landmark=0.95            ## if use euro, this will be disable
+config.TRACE.smooth_box=0.3                         ## if use euro, this will be disable
+config.TRACE.smooth_landmark=0.95                   ## if use euro, this will be disable
 config.TRACE.iou_thres=0.5
 
 config.DATA = edict()
