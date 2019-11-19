@@ -164,7 +164,7 @@ class FaceAna():
                     contain=True
                     break
             if not contain:
-                result.append(now_bboxs[i])
+                result.append(now_bboxs[i][0:4])
 
 
         return np.array(result)
