@@ -61,7 +61,7 @@ class FaceAna():
         landmarks,states=self.face_landmark.batch_call(image,boxes)
 
 
-        #### calculate the headpose for the whole image
+        ### refine the landmark
         landmarks = self.trace.calculate(image, landmarks)
 
 
