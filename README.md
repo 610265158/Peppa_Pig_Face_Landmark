@@ -86,9 +86,10 @@ At last, i need your star,also your contribution.
 
 ## TODO
 
+
 - [x]  Transfer to tensorflow 2.0   
 - [x]  small model including tflite
 - [ ]  Add some GAN model to make it fun ing....
 - [ ]  3-d face algorithm
-- [ ]  maybe a mobile device version, so tired
-- [ ]  switch to pytorch,  HAHA... 
+- [ ]  **maybe a mobile device version, it is on the way, i learn a lot about mobile device.
+- [ ]  ~~switch to pytorch,  HAHA... 
