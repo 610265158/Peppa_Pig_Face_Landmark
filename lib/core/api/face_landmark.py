@@ -50,10 +50,23 @@ class FaceLandmark:
 
             ##inference
             image_croped = np.expand_dims(image_croped, axis=0)
-            res = self.model.inference(image_croped)
-            ##reshape it as [n,keypoint_num,2]
-            landmark = res['landmark'].numpy().reshape((-1, self.keypoints_num, 2))
-            states = res['cls'].numpy()
+
+            if not self.tflite:
+                res = self.model.inference(image_croped)
+
+                landmark = res['landmark'].numpy().reshape(
+                    (-1, self.keypoints_num, 2))
+                states = res['cls'].numpy()
+            else:
+
+                image_croped = image_croped.astype(np.float32)
+                self.model.set_tensor(
+                    self.input_details[0]['index'], image_croped)
+                self.model.invoke()
+
+                landmark = self.model.get_tensor(
+                    self.output_details[2]['index']).reshape((-1, self.keypoints_num, 2))
+                states = self.model.get_tensor(self.output_details[0]['index'])
 
             landmark = self.postprocess(landmark, detail)
 
