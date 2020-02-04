@@ -60,6 +60,12 @@ class FaceDetector:
                                                                    target_height=input_shape[0],
                                                                    target_width =input_shape[1])
 
+            if cfg.DETECT.input_shape[2] == 1:
+                ##gray scale
+                image_fornet = cv2.cvtColor(image_fornet, cv2.COLOR_RGB2GRAY)
+                image_fornet = np.expand_dims(image_fornet, axis=-1)
+
+
             image_fornet = np.expand_dims(image_fornet, 0)
 
             start = time.time()
@@ -70,6 +76,11 @@ class FaceDetector:
             image_fornet, scale_x, scale_y, dx, dy = self.preprocess(image,
                                                                      target_height=input_shape[0],
                                                                      target_width=input_shape[1])
+            if cfg.DETECT.input_shape[2] == 1:
+                ##gray scale
+                image_fornet = cv2.cvtColor(image_fornet, cv2.COLOR_RGB2GRAY)
+                image_fornet = np.expand_dims(image_fornet, axis=-1)
+
 
             image_fornet = np.expand_dims(image_fornet, 0).astype(np.float32)
 

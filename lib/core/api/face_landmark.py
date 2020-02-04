@@ -48,8 +48,17 @@ class FaceLandmark:
 
             image_croped, detail = self.preprocess(img, bbox, i)
 
+
+
+            if cfg.KEYPOINTS.input_shape[2]==1:
+
+                ##gray scale
+                image_croped=cv2.cvtColor(image_croped,cv2.COLOR_RGB2GRAY)
+                image_croped=np.expand_dims(image_croped,axis=-1)
             ##inference
             image_croped = np.expand_dims(image_croped, axis=0)
+            print(image_croped.shape)
+
 
             if not self.tflite:
                 res = self.model.inference(image_croped)
@@ -58,6 +67,8 @@ class FaceLandmark:
                     (-1, self.keypoints_num, 2))
                 states = res['cls'].numpy()
             else:
+
+
 
                 image_croped = image_croped.astype(np.float32)
                 self.model.set_tensor(
@@ -110,6 +121,8 @@ class FaceLandmark:
         h, w, _ = crop_image.shape
         crop_image = cv2.resize(crop_image, (cfg.KEYPOINTS.input_shape[1],
                                              cfg.KEYPOINTS.input_shape[0]))
+
+
 
         cv2.imshow('i am watching u * * %d' % i, crop_image)
 
@@ -201,6 +214,14 @@ class FaceLandmark:
                                                  cfg.KEYPOINTS.input_shape[0]))
 
             cv2.imshow('i am watching u * * %d' % i, crop_image)
+
+
+            if cfg.KEYPOINTS.input_shape[2]==1:
+
+                ##gray scale
+                crop_image=cv2.cvtColor(crop_image,cv2.COLOR_RGB2GRAY)
+                crop_image=np.expand_dims(crop_image,axis=-1)
+
             images_batched.append(crop_image)
 
             details.append([h, w, bbox[1], bbox[0], add])

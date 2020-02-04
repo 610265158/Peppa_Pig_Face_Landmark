@@ -28,6 +28,13 @@ and with face mask:
 
 + easydict
 
++ flask
+
+
+## update
+
+2020.2.4:  add http server
+
 ## useage
 
 1. download pretrained model, put them into ./model
@@ -65,8 +72,20 @@ and with face mask:
 2. run `python demo.py --cam_id 0` use a camera    
    or  `python demo.py --video test.mp4`  detect for a video    
    or  `python demo.py --img_dir ./test`  detect for images dir no track   
-   or `python demo.py --video test.mp4 --mask True` if u want a face mask
+   or  `python demo.py --video test.mp4 --mask True` if u want a face mask
     
+## start a http server
+
+1. run `python demo.py --web 1`
+
+2. test by run `python web_demo_test.py`, 
+
+the result is a json, formate:
+`
+[{ "bbox": [x1, y1, x2, y2], 
+    "landmark": [[x1, y1], [x2, y2],[x3,y3],[...]]}]
+`
+
 
 ##  Train
 The project is based on two of my other repos, and both tensorflow1 and tensorflow2 are supported. 
@@ -86,9 +105,9 @@ At last, i need your star,also your contribution.
 
 ## TODO
 
-
 - [x]  Transfer to tensorflow 2.0   
 - [x]  small model including tflite
+- [x]  add http server demo
 - [ ]  Add some GAN model to make it fun ing....
 - [ ]  3-d face algorithm
 - [ ]  a mobile device version, it is on the way, i learn a lot about mobile device. **

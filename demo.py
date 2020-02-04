@@ -8,12 +8,14 @@ import argparse
 
 from lib.core.api.facer import FaceAna
 from lib.core.headpose.pose import get_head_pose, line_pairs
+from lib.web.http import app
+
+from config import config as cfg
 
 
-facer = FaceAna()
 
 def video(video_path_or_cam):
-
+    facer = FaceAna()
     vide_capture=cv2.VideoCapture(video_path_or_cam)
 
     while 1:
@@ -74,9 +76,7 @@ def video(video_path_or_cam):
 
 
 def images(image_dir):
-
-
-
+    facer = FaceAna()
 
     image_list=os.listdir(image_dir)
     image_list=[x for x in image_list if 'jpg' in x or 'png' in x]
@@ -142,6 +142,12 @@ def images(image_dir):
         if key==ord('q'):
             return
 
+
+
+def web_demo():
+    app.run(host=cfg.http_server.ip,
+            port=cfg.http_server.port,
+            debug=True)
 def build_argparse():
     parser = argparse.ArgumentParser(description='Start train.')
     parser.add_argument('--video', dest='video', type=str, default=None, \
@@ -153,6 +159,10 @@ def build_argparse():
 
     parser.add_argument('--mask', dest='mask', type=bool, default=False, \
                         help='mask the face or not')
+
+    parser.add_argument('--web', dest='web', type=bool, default=False, \
+                        help='mask the face or not')
+
     args = parser.parse_args()
     return  args
 
@@ -164,7 +174,11 @@ if __name__=='__main__':
     args=build_argparse()
 
 
-    if args.img_dir is not None:
+    if args.web is not None:
+        web_demo()
+
+
+    elif args.img_dir is not None:
         images(args.img_dir)
 
     elif args.video is not None:

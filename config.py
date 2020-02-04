@@ -5,7 +5,7 @@ import numpy as np
 from easydict import EasyDict as edict
 
 config = edict()
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"           ### if to use cuda,
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"           ### if to use cuda,
 
 config.DETECT = edict()
 config.DETECT.model_path='./model/detector'         ### saved_model or tflite
@@ -38,5 +38,8 @@ config.DATA.pixel_means = np.array([127., 127., 127.]) # RGB
 
 
 
+config.http_server = edict()
+config.http_server.ip="0.0.0.0"
+config.http_server.port=5000
 
 
