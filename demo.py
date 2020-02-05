@@ -174,7 +174,7 @@ if __name__=='__main__':
     args=build_argparse()
 
 
-    if args.web is not None:
+    if args.web:
         web_demo()
 
 
