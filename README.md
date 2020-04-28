@@ -32,6 +32,7 @@ and with face mask:
 
 
 ## update
+2020.4.28 A new detector based on centernet is trained, here is the [link](https://github.com/610265158/mobilenetv3_centernet), but i don't know how to integrate it into this project, because it is a tf1 project. I am thinking about to rewrite the project to make it more usefull.
 
 2020.2.4:  add http server
 
