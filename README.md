@@ -94,15 +94,10 @@ If you want to train with your own data,
 or you want to know the details about the models, click them.
 
  + [dsfd_light_model](https://github.com/610265158/DSFD-tensorflow)  **tf2 branch**
+ + [centernet](https://github.com/610265158/mobilenetv3_centernet)  
  + [face_landmark](https://github.com/610265158/face_landmark.git)
 
 
-## ps
-The project is supported by myself,
-and i need your advice to improve it.
-Hope the codes can help you, 
-contact me if u have any question.
-At last, i need your star,also your contribution.
 
 ## TODO
 
