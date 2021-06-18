@@ -1,6 +1,6 @@
 # Peppa_Pig_Face_Engine
 
-Switch all these models to pytorch, yes, i amd doing that.
+Switch all these models to pytorch, yes, i am doing that.
 
 ## introduction
 
