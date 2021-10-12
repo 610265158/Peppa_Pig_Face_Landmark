@@ -1,5 +1,5 @@
 tensorflow==2.0
-opencv_python==3.4.3.18
+opencv_python==3.4.7.28
 numpy==1.14.0
 easydict==1.7
 matplotlib==3.0.2
