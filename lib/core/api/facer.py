@@ -4,7 +4,7 @@ import time
 
 from lib.core.api.face_landmark import FaceLandmark
 from lib.core.api.face_detector import FaceDetector
-from lib.core.LK.lk import GroupTrack,OneEuroFilter,EmaFilter
+from lib.core.smoother.lk import GroupTrack,OneEuroFilter,EmaFilter
 
 from config import config as cfg
 
@@ -16,11 +16,9 @@ class FaceAna():
     def __init__(self):
 
         
-        self.face_detector = FaceDetector()
-        self.face_landmark = FaceLandmark()
+        self.face_detector = FaceDetector(mnn_model_path=cfg.DETECT.model_path)
+        self.face_landmark = FaceLandmark(mnn_model_path=cfg.KEYPOINTS.model_path)
         self.trace = GroupTrack()
-
-
 
         ###another thread should run detector in a slow way and update the track_box
         self.track_box=None
@@ -33,10 +31,7 @@ class FaceAna():
         self.iou_thres=cfg.TRACE.iou_thres
         self.alpha=cfg.TRACE.smooth_box
 
-        if 'ema' in cfg.TRACE.ema_or_one_euro:
-            self.filter = EmaFilter(self.alpha)
-        else:
-            self.filter = OneEuroFilter()
+        self.filter = EmaFilter(self.alpha)
 
     def run(self,image):
 
@@ -50,16 +45,11 @@ class FaceAna():
             boxes=self.track_box
             self.previous_image = image
 
-
-
         boxes=self.sort_and_filter(boxes)
 
         boxes_return = np.array(boxes)
 
-
-        #### batch predict for face landmark
-        landmarks,states=self.face_landmark.batch_call(image,boxes)
-
+        landmarks,states=self.face_landmark(image,boxes)
 
         ### refine the landmark
         landmarks = self.trace.calculate(image, landmarks)
@@ -70,6 +60,8 @@ class FaceAna():
         for i in range(landmarks.shape[0]):
             track.append([np.min(landmarks[i][:,0]),np.min(landmarks[i][:,1]),np.max(landmarks[i][:,0]),np.max(landmarks[i][:,1])])
         tmp_box=np.array(track)
+
+
 
         self.track_box = self.judge_boxs(boxes_return, tmp_box)
 

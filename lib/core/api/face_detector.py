@@ -1,34 +1,213 @@
+import sys
+sys.path.append('.')
 import numpy as np
 import cv2
-import tensorflow as tf
+
 import math
 import time
-
+import  torch
+import  MNN
+import math
 from config import config as cfg
 
+
+def convert_locations_to_boxes(locations, priors, center_variance,
+                               size_variance):
+    """Convert regressional location results of SSD into boxes in the form of (center_x, center_y, h, w).
+    The conversion:
+        $$predicted\_center * center_variance = \frac {real\_center - prior\_center} {prior\_hw}$$
+        $$exp(predicted\_hw * size_variance) = \frac {real\_hw} {prior\_hw}$$
+    We do it in the inverse direction here.
+    Args:
+        locations (batch_size, num_priors, 4): the regression output of SSD. It will contain the outputs as well.
+        priors (num_priors, 4) or (batch_size/1, num_priors, 4): prior boxes.
+        center_variance: a float used to change the scale of center.
+        size_variance: a float used to change of scale of size.
+    Returns:
+        boxes:  priors: [[center_x, center_y, h, w]]. All the values
+            are relative to the image size.
+    """
+    # priors can have one dimension less.
+
+
+    if len(priors.shape) + 1 == len(locations.shape):
+        priors = np.expand_dims(priors, 0)
+    return np.concatenate([
+        locations[..., :2] * center_variance * priors[..., 2:] + priors[..., :2],
+        np.exp(locations[..., 2:] * size_variance) * priors[..., 2:]
+    ], axis=len(locations.shape) - 1)
+def convert_boxes_to_locations(center_form_boxes, center_form_priors, center_variance, size_variance):
+    # priors can have one dimension less
+    if len(center_form_priors.shape) + 1 == len(center_form_boxes.shape):
+        center_form_priors = np.expand_dims(center_form_priors, 0)
+    return np.concatenate([
+        (center_form_boxes[..., :2] - center_form_priors[..., :2]) / center_form_priors[..., 2:] / center_variance,
+        np.log(center_form_boxes[..., 2:] / center_form_priors[..., 2:]) / size_variance
+    ], axis=len(center_form_boxes.shape) - 1)
+
+
+def area_of(left_top, right_bottom):
+    """Compute the areas of rectangles given two corners.
+    Args:
+        left_top (N, 2): left top corner.
+        right_bottom (N, 2): right bottom corner.
+    Returns:
+        area (N): return the area.
+    """
+    hw = np.clip(right_bottom - left_top, 0.0, None)
+    return hw[..., 0] * hw[..., 1]
+
+
+def iou_of(boxes0, boxes1, eps=1e-5):
+    """Return intersection-over-union (Jaccard index) of boxes.
+    Args:
+        boxes0 (N, 4): ground truth boxes.
+        boxes1 (N or 1, 4): predicted boxes.
+        eps: a small number to avoid 0 as denominator.
+    Returns:
+        iou (N): IoU values.
+    """
+    overlap_left_top = np.maximum(boxes0[..., :2], boxes1[..., :2])
+    overlap_right_bottom = np.minimum(boxes0[..., 2:], boxes1[..., 2:])
+
+    overlap_area = area_of(overlap_left_top, overlap_right_bottom)
+    area0 = area_of(boxes0[..., :2], boxes0[..., 2:])
+    area1 = area_of(boxes1[..., :2], boxes1[..., 2:])
+    return overlap_area / (area0 + area1 - overlap_area + eps)
+
+
+def center_form_to_corner_form(locations):
+    return np.concatenate([locations[..., :2] - locations[..., 2:] / 2,
+                           locations[..., :2] + locations[..., 2:] / 2], len(locations.shape) - 1)
+
+
+def corner_form_to_center_form(boxes):
+    return np.concatenate([
+        (boxes[..., :2] + boxes[..., 2:]) / 2,
+        boxes[..., 2:] - boxes[..., :2]
+    ], len(boxes.shape) - 1)
+
+
+def hard_nms(box_scores, iou_threshold, top_k=-1, candidate_size=200):
+    """
+    Args:
+        box_scores (N, 5): boxes in corner-form and probabilities.
+        iou_threshold: intersection over union threshold.
+        top_k: keep top_k results. If k <= 0, keep all the results.
+        candidate_size: only consider the candidates with the highest scores.
+    Returns:
+         picked: a list of indexes of the kept boxes
+    """
+    scores = box_scores[:, -1]
+    boxes = box_scores[:, :-1]
+    picked = []
+    # _, indexes = scores.sort(descending=True)
+    indexes = np.argsort(scores)
+    # indexes = indexes[:candidate_size]
+    indexes = indexes[-candidate_size:]
+    while len(indexes) > 0:
+        # current = indexes[0]
+        current = indexes[-1]
+        picked.append(current)
+        if 0 < top_k == len(picked) or len(indexes) == 1:
+            break
+        current_box = boxes[current, :]
+        # indexes = indexes[1:]
+        indexes = indexes[:-1]
+        rest_boxes = boxes[indexes, :]
+        iou = iou_of(
+            rest_boxes,
+            np.expand_dims(current_box, axis=0),
+        )
+        indexes = indexes[iou <= iou_threshold]
+
+    return box_scores[picked, :]
+
 class FaceDetector:
-    def __init__(self):
-        """
-        the model was constructed by the params in config.py
-        """
+    def __init__(self,mnn_model_path='pretrained/RFB-320.mnn'):
 
-        self.model_path=cfg.DETECT.model_path
-        self.thres=cfg.DETECT.thres
-        self.input_shape=cfg.DETECT.input_shape
+        self.image_mean = np.array([127, 127, 127])
+        self.image_std = 128.0
+        self.iou_threshold = 0.3
+        self.threshold=0.3
+        self.center_variance = 0.1
+        self.size_variance = 0.2
+        self.min_boxes = [[10, 16, 24], [32, 48], [64, 96], [128, 192, 256]]
+        self.strides = [8, 16, 32, 64]
+
+        self.interpreter = MNN.Interpreter(mnn_model_path)
+        self.session = self.interpreter.createSession()
+        self.input_tensor = self.interpreter.getSessionInput(self.session)
+
+        self.input_size=(320,240)
+        self.priors = self.define_img_size(self.input_size)
 
 
 
-        if 'lite' in self.model_path:
-            self.model = tf.lite.Interpreter(model_path=self.model_path)
-            self.model.allocate_tensors()
-            self.input_details = self.model.get_input_details()
-            self.output_details = self.model.get_output_details()
-            self.tflite=True
-        else:
-            self.model = tf.saved_model.load(self.model_path)
+    def define_img_size(self,image_size):
+        shrinkage_list = []
+        feature_map_w_h_list = []
+        for size in image_size:
+            feature_map = [np.ceil(size / stride) for stride in self.strides]
+            feature_map_w_h_list.append(feature_map)
 
-            self.tflite = False
+        for i in range(0, len(image_size)):
+            shrinkage_list.append(self.strides)
+        priors = self.generate_priors(feature_map_w_h_list, shrinkage_list, image_size, self.min_boxes)
 
+        return priors
+    def generate_priors(self,feature_map_list, shrinkage_list, image_size, min_boxes, clamp=True):
+            priors = []
+            for index in range(0, len(feature_map_list[0])):
+                scale_w = image_size[0] / shrinkage_list[0][index]
+                scale_h = image_size[1] / shrinkage_list[1][index]
+                for j in range(0, int(feature_map_list[1][index])):
+                    for i in range(0, int(feature_map_list[0][index])):
+                        x_center = (i + 0.5) / scale_w
+                        y_center = (j + 0.5) / scale_h
+
+                        for min_box in min_boxes[index]:
+                            w = min_box / image_size[0]
+                            h = min_box / image_size[1]
+                            priors.append([
+                                x_center,
+                                y_center,
+                                w,
+                                h
+                            ])
+            print("priors nums:{}".format(len(priors)))
+            priors = torch.tensor(priors)
+            if clamp:
+                torch.clamp(priors, 0.0, 1.0, out=priors)
+            return priors
+
+    def predict(self,width, height, confidences, boxes, prob_threshold, iou_threshold=0.3, top_k=-1):
+        boxes = boxes[0]
+        confidences = confidences[0]
+        picked_box_probs = []
+        picked_labels = []
+        for class_index in range(1, confidences.shape[1]):
+            probs = confidences[:, class_index]
+            mask = probs > prob_threshold
+            probs = probs[mask]
+            if probs.shape[0] == 0:
+                continue
+            subset_boxes = boxes[mask, :]
+            box_probs = np.concatenate([subset_boxes, probs.reshape(-1, 1)], axis=1)
+            box_probs = hard_nms(box_probs,
+                                           iou_threshold=iou_threshold,
+                                           top_k=top_k,
+                                           )
+            picked_box_probs.append(box_probs)
+            picked_labels.extend([class_index] * box_probs.shape[0])
+        if not picked_box_probs:
+            return np.array([]), np.array([]), np.array([])
+        picked_box_probs = np.concatenate(picked_box_probs)
+        picked_box_probs[:, 0] *= width
+        picked_box_probs[:, 1] *= height
+        picked_box_probs[:, 2] *= width
+        picked_box_probs[:, 3] *= height
+        return picked_box_probs[:, :4].astype(np.int32), np.array(picked_labels), picked_box_probs[:, 4]
 
     def __call__(self, image,
                  score_threshold=cfg.DETECT.thres,
@@ -46,54 +225,44 @@ class FaceDetector:
             boxes: a float numpy array of shape [num_faces, 5].
 
         """
-        if not self.tflite:
-            if input_shape is None:
-                h,w,c=image.shape
-                input_shape = (math.ceil(h / 64 ) * 64,
-                               math.ceil(w / 64 ) * 64)
-            else:
-                h, w = input_shape
-                input_shape = (math.ceil(h / 64 ) * 64,
-                               math.ceil(w / 64 ) * 64)
-
-            image_fornet, scale_x, scale_y,dx,dy = self.preprocess(image,
-                                                                   target_height=input_shape[0],
-                                                                   target_width =input_shape[1])
-
-            if cfg.DETECT.input_shape[2] == 1:
-                ##gray scale
-                image_fornet = cv2.cvtColor(image_fornet, cv2.COLOR_RGB2GRAY)
-                image_fornet = np.expand_dims(image_fornet, axis=-1)
 
 
-            image_fornet = np.expand_dims(image_fornet, 0)
+        ### w h
+        input_size = self.input_size
 
-            start = time.time()
-            bboxes = self.model.inference(image_fornet)
-            print('xx', time.time() - start)
-        else:
-            input_shape = (320, 320)
-            image_fornet, scale_x, scale_y, dx, dy = self.preprocess(image,
-                                                                     target_height=input_shape[0],
-                                                                     target_width=input_shape[1])
-            if cfg.DETECT.input_shape[2] == 1:
-                ##gray scale
-                image_fornet = cv2.cvtColor(image_fornet, cv2.COLOR_RGB2GRAY)
-                image_fornet = np.expand_dims(image_fornet, axis=-1)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image_fornet, scale_x, scale_y, dx, dy = self.preprocess(image,
+                                                                 target_height=input_size[1],
+                                                                 target_width=input_size[0])
+        image_fornet = image_fornet.astype(np.float32)
+        image_fornet = (image_fornet - self.image_mean) / self.image_std
+
+        image_fornet = image_fornet.transpose((2, 0, 1))
+
+        image_fornet = image_fornet.astype(np.float32)
 
 
-            image_fornet = np.expand_dims(image_fornet, 0).astype(np.float32)
 
-            start = time.time()
-            self.model.set_tensor(self.input_details[0]['index'], image_fornet)
+        tmp_input = MNN.Tensor((1, 3, input_size[1], input_size[0]), MNN.Halide_Type_Float, image_fornet,
+                               MNN.Tensor_DimensionType_Caffe)
 
-            self.model.invoke()
+        self.input_tensor.copyFrom(tmp_input)
+        time_time = time.time()
+        self.interpreter.runSession(self.session)
+        scores = self.interpreter.getSessionOutput(self.session, "scores").getData()
+        boxes = self.interpreter.getSessionOutput(self.session, "boxes").getData()
+        boxes = np.expand_dims(np.reshape(boxes, (-1, 4)), axis=0)
+        scores = np.expand_dims(np.reshape(scores, (-1, 2)), axis=0)
+        print("inference time: {} s".format(round(time.time() - time_time, 4)))
 
-            bboxes = self.model.get_tensor(self.output_details[0]['index'])
+        boxes = convert_locations_to_boxes(boxes, self.priors, self.center_variance, self.size_variance)
+        boxes = center_form_to_corner_form(boxes)
 
-            print('xx', time.time() - start)
 
-        bboxes=self.py_nms(np.array(bboxes[0]),iou_thres=iou_threshold,score_thres=score_threshold)
+
+        bboxes=np.concatenate([boxes,scores[:,:,1:2]],axis=-1)
+
+        bboxes=self.py_nms(bboxes[0],iou_thres=iou_threshold,score_thres=score_threshold)
 
         ###recorver to raw image
         boxes_scaler = np.array([  (input_shape[1]) / scale_x,
@@ -116,8 +285,7 @@ class FaceDetector:
 
         h, w, c = image.shape
 
-        bimage = np.zeros(shape=[target_height, target_width, c], dtype=image.dtype) + np.array(cfg.DATA.pixel_means,
-                                                                                                dtype=image.dtype)
+        bimage = np.zeros(shape=[target_height, target_width, c], dtype=image.dtype)
         scale_y = target_height / h
         scale_x = target_width / w
 
@@ -179,3 +347,28 @@ class FaceDetector:
 
 
 
+if __name__ == "__main__":
+    import  os
+
+    model=FaceDetector('./pretrained/RFB-320.mnn')
+    tes_dir='./figure'
+    listdir = os.listdir(tes_dir)
+    listdir=[x for x in listdir if 'jpg' in x]
+
+    for file_path in listdir:
+        img_path = os.path.join(tes_dir, file_path)
+        image_ori = cv2.imread(img_path)
+        image = cv2.cvtColor(image_ori, cv2.COLOR_BGR2RGB)
+
+        boxes=model(image)
+
+
+        print(boxes.shape)
+        for i in range(boxes.shape[0]):
+            box = boxes[i, :4].astype(np.int)
+
+            score=boxes[i,4]
+            cv2.rectangle(image_ori, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+
+        cv2.imshow("UltraFace_mnn_py", image_ori)
+        cv2.waitKey(-1)
