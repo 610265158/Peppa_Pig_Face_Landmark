@@ -25,7 +25,7 @@ and with face mask:
 
 ## requirment
 
-+ PyTorch （tensorflow1 need to switch to tf1 branch )
++ PyTorch
 
 + MNN  
 
