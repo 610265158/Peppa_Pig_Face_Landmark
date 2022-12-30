@@ -165,10 +165,17 @@ class Train(object):
 
         self.scaler = torch.cuda.amp.GradScaler()
 
+    def nme(self,target, preds):
+        target = torch.reshape(target, shape=[-1, 98, 2])
+        preds = torch.reshape(preds, shape=[-1, 98, 2])
 
+        norm = torch.linalg.norm(target[:, 60, :] - target[:, 72, :], dim=-1)
 
+        distance = torch.mean(torch.linalg.norm(preds - target, dim=-1), dim=-1) / norm
 
+        nme = torch.mean(distance)
 
+        return nme
 
 
     def metric(self,targets,preds ):
@@ -178,7 +185,8 @@ class Train(object):
 
         mad=torch.mean(torch.abs(preds-targets))
 
-        return mad,mse
+        nme=self.nme(targets,preds)
+        return mad,mse,nme
 
     def custom_loop(self):
         """Custom training and testing loop.
@@ -286,9 +294,10 @@ class Train(object):
 
         def distributed_test_epoch(epoch_num):
             summary_loss = AverageMeter()
-            summary_dice= AverageMeter()
+
             summary_mad= AverageMeter()
             summary_mse= AverageMeter()
+            summary_nme = AverageMeter()
 
 
             self.model.eval()
@@ -312,16 +321,17 @@ class Train(object):
 
 
 
-                    val_mad,val_mse =self.metric(kps[:,:136],output[:,:136])
+                    val_mad,val_mse,val_nme =self.metric(kps[:,:98*2],output[:,:98*2])
 
                     if self.ddp:
 
                         torch.distributed.all_reduce(val_mad.div_(torch.distributed.get_world_size()))
                         torch.distributed.all_reduce(val_mse.div_(torch.distributed.get_world_size()))
-
+                        torch.distributed.all_reduce(val_nme.div_(torch.distributed.get_world_size()))
 
                     summary_mad.update(val_mad.detach().item(), batch_size)
                     summary_mse.update(val_mse.detach().item(), batch_size)
+                    summary_nme.update(val_nme.detach().item(), batch_size)
 
                 if step % cfg.TRAIN.log_interval == 0:
 
@@ -330,18 +340,20 @@ class Train(object):
                                       'summary_loss: %.6f, ' \
                                       'summary_mad: %.6f, ' \
                                       'summary_mse: %.6f, ' \
+                                      'summary_nme: %.6f, ' \
                                       'time: %.6f' % (
                                           self.fold,step,
                                           summary_loss.avg,
                                           summary_mad.avg,
                                           summary_mse.avg,
+                                          summary_nme.avg,
                                           time.time() - t)
 
                         logger.info(log_message)
 
 
 
-            return summary_loss,summary_mad,summary_mse
+            return summary_loss,summary_mad,summary_mse,summary_nme
 
 
 
@@ -373,19 +385,21 @@ class Train(object):
 
             if epoch%cfg.TRAIN.test_interval==0 and epoch>0 or epoch%10==0:
 
-                summary_loss ,summary_mad,summary_mse= distributed_test_epoch(epoch)
+                summary_loss ,summary_mad,summary_mse,summary_nme= distributed_test_epoch(epoch)
 
                 val_epoch_log_message = '[fold %d], ' \
                                         '[RESULT]: VAL. Epoch: %d,' \
                                         ' summary_loss: %.5f,' \
                                         ' mad_score: %.5f,' \
                                         ' mse_score: %.5f,' \
+                                        ' nme_score: %.5f,' \
                                         ' time:%.5f' % (
                                             self.fold,
                                             epoch,
                                             summary_loss.avg,
                                             summary_mad.avg,
                                             summary_mse.avg,
+                                            summary_nme.avg,
                                             (time.time() - t))
 
                 logger.info(val_epoch_log_message)
@@ -400,10 +414,10 @@ class Train(object):
 
                 #### save the model every end of epoch
                 #### save the model every end of epoch
-                current_model_saved_name='./models/fold%d_epoch_%d_val_loss_%.6f_val_mse_%.6f.pth'%(self.fold,
+                current_model_saved_name='./models/fold%d_epoch_%d_val_loss_%.6f_val_nme_%.6f.pth'%(self.fold,
                                                                                                      epoch,
                                                                                                      summary_loss.avg,
-                                                                                                     summary_mse.avg,)
+                                                                                                     summary_nme.avg,)
                 logger.info('A model saved to %s' % current_model_saved_name)
                 #### save the model every end of epoch
                 if  self.ddp and torch.distributed.get_rank() == 0 :
@@ -458,15 +472,16 @@ class Train(object):
                 example_image=np.array(images[i]*255,dtype=np.uint8)
                 example_image=np.transpose(example_image,[1,2,0])
                 example_image=np.ascontiguousarray(example_image)
-                example_kps=np.array(kps[i][:98*2].reshape(-1,2))*128
-                print(example_kps)
+                example_kps=np.array(kps[i][:98*2].reshape(-1,2))*512
+                print(kps[i])
 
                 for _index in range(example_kps.shape[0]):
                     x_y = example_kps[_index]
 
                     cv2.circle(example_image, (int(x_y[0] ),int(x_y[1] )),
-                               color=(255, 0, 0), radius=2, thickness=4)
-
+                               color=(255, 0, 0), radius=1, thickness=2)
+                    cv2.putText(example_image,  "{:2d}".format(_index), (int(x_y[0] ),int(x_y[1] )), cv2.FONT_HERSHEY_SIMPLEX,
+                                0.75, (0, 0, 0), thickness=2)
 
                 cv2.imshow('ss', example_image)
                 cv2.waitKey(0)
