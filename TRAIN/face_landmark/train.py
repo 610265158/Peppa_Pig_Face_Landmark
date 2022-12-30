@@ -14,31 +14,12 @@ from train_config import config as cfg
 import setproctitle
 
 
-setproctitle.setproctitle("pks")
+setproctitle.setproctitle("kps")
 
 
 
 
 
-def get_fold(df,n_folds):
-
-    skf = KFold(n_splits=n_folds, shuffle=True, random_state=cfg.SEED)
-    for fold, (train_idx, val_idx) in enumerate(skf.split(df)):
-        df.loc[val_idx, 'fold'] = fold
-
-    return df
-
-
-def setppm100asval(df):
-    def func(fn):
-        if 'PPM' in fn:
-            return 0
-        else:
-            return 1
-    df['fold']=df['image'].apply(func)
-
-
-    return df
 
 
 def main():
@@ -46,10 +27,12 @@ def main():
 
 
 
+    with open(cfg.DATA.train_f_path,mode='r') as f:
+        train_df=f.readlines()
 
-    train_df = pd.read_csv(cfg.DATA.train_f_path)
+    with open(cfg.DATA.val_f_path,mode='r') as f:
+        val_df=f.readlines()
 
-    val_df =pd.read_csv(cfg.DATA.val_f_path)
 
 
     ###build trainer

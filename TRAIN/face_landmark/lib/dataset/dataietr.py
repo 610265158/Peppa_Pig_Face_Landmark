@@ -43,6 +43,7 @@ class AlaskaDataIter():
 
 
         self.df=df
+
         if self.training_flag:
             self.balance()
 
@@ -71,7 +72,7 @@ class AlaskaDataIter():
 
     def __getitem__(self, item):
 
-        return self.single_map_func(self.df.iloc[item], self.training_flag)
+        return self.single_map_func(self.df[item], self.training_flag)
 
     def __len__(self):
 
@@ -84,13 +85,12 @@ class AlaskaDataIter():
         lar_count = 0
         for i in tqdm(range(len(df))):
 
-            ann=df.iloc[i]
+            cur_df=df[i]
 
             ### 300w  balance,  according to keypoints
+            ann=cur_df.split()
+            label =np.array(ann[:98*2],dtype=np.float32).reshape([-1,2])
 
-            label = ann['keypoint'][1:-1].split(',')
-            label = [float(x) for x in label]
-            label = np.array(label).reshape([-1, 2])
 
             bbox = [float(np.min(label[:, 0])), float(np.min(label[:, 1])), float(np.max(label[:, 0])),
                     float(np.max(label[:, 1]))]
@@ -102,45 +102,48 @@ class AlaskaDataIter():
             #     res_anns.remove(ann)
 
             left_eye_close = np.sqrt(
-                np.square(label[37, 0] - label[41, 0]) +
-                np.square(label[37, 1] - label[41, 1])) / bbox_height < self.eye_close_thres \
-                             or np.sqrt(np.square(label[38, 0] - label[40, 0]) +
-                                        np.square(label[38, 1] - label[40, 1])) / bbox_height < self.eye_close_thres
+                np.square(label[62, 0] - label[66, 0]) +
+                np.square(label[62, 1] - label[66, 1])) / bbox_height < self.eye_close_thres
+
             right_eye_close = np.sqrt(
-                np.square(label[43, 0] - label[47, 0]) +
-                np.square(label[43, 1] - label[47, 1])) / bbox_height < self.eye_close_thres \
-                              or np.sqrt(np.square(label[44, 0] - label[46, 0]) +
-                                         np.square(
-                                             label[44, 1] - label[46, 1])) / bbox_height < self.eye_close_thres
+                np.square(label[70, 0] - label[74, 0]) +
+                np.square(label[70, 1] - label[74, 1])) / bbox_height < self.eye_close_thres
+
             if left_eye_close or right_eye_close:
                 for i in range(5):
-                    expanded.append(ann)
-            ###half face
-            if np.sqrt(np.square(label[36, 0] - label[45, 0]) +
-                       np.square(label[36, 1] - label[45, 1])) / bbox_width < 0.5:
-                for i in range(10):
-                    expanded.append(ann)
+                    expanded.append(cur_df)
 
-            if np.sqrt(np.square(label[62, 0] - label[66, 0]) +
-                       np.square(label[62, 1] - label[66, 1])) / bbox_height > 0.15:
-                for i in range(10):
-                    expanded.append(ann)
+            ##half face
+            if np.sqrt(np.square(label[60, 0] - label[72, 0]) +
+                       np.square(label[60, 1] - label[72, 1])) / bbox_width < 0.5:
+                for i in range(5):
+                    expanded.append(cur_df)
 
-            if np.sqrt(np.square(label[62, 0] - label[66, 0]) +
-                       np.square(label[62, 1] - label[66, 1])) / cfg.MODEL.hin > self.big_mouth_open_thres:
-                for i in range(25):
-                    expanded.append(ann)
+
+            #open mouth
+            if np.sqrt(np.square(label[90, 0] - label[94, 0]) +
+                       np.square(label[90, 1] - label[94, 1])) / bbox_height > 0.15:
+                for i in range(2):
+                    expanded.append(cur_df)
+
+            if np.sqrt(np.square(label[90, 0] - label[94, 0]) +
+                       np.square(label[90, 1] - label[94, 1])) / cfg.MODEL.hin > self.big_mouth_open_thres:
+                for i in range(2):
+                    expanded.append(cur_df)
+
             ##########eyes diff aug
             if left_eye_close and not right_eye_close:
                 for i in range(20):
-                    expanded.append(ann)
+                    expanded.append(cur_df)
                 lar_count += 1
             if not left_eye_close and right_eye_close:
                 for i in range(20):
-                    expanded.append(ann)
-                lar_count += 15
+                    expanded.append(cur_df)
+                # lar_count += 15
 
-        self.df=self.df.append(expanded)
+
+        # print(lar_count)
+        self.df+=expanded
         logger.info('befor balance the dataset contains %d images' % (len(df)))
         logger.info('after balanced the datasets contains %d samples' % (len(self.df)))
 
@@ -200,12 +203,13 @@ class AlaskaDataIter():
         """Data augmentation function."""
         ####customed here
 
+        dp=dp.split()
+        kps=dp[:98*2]
+        fn=dp[-1]
 
-        fn=dp['image']
         image=cv2.imread(os.path.join(self.img_root_path,fn))
-        kps=dp['keypoint'][1:-1].split(',')
-        kps=[float(x) for x in kps]
-        kps=np.array(kps).reshape([-1,2])
+
+        kps=np.array(kps,dtype=np.float32).reshape([-1,2])
         bbox = [float(np.min(kps[:, 0])), float(np.min(kps[:, 1])), float(np.max(kps[:, 0])),
                 float(np.max(kps[:, 1]))]
 
@@ -279,6 +283,7 @@ class AlaskaDataIter():
         label = label.reshape([-1]).astype(np.float32)
         cla_label = cla_label.astype(np.float32)
 
+        print(label.shape)
         label = np.concatenate([label, PRY, cla_label], axis=0)
 
 

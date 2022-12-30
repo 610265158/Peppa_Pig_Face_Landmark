@@ -458,7 +458,7 @@ class Train(object):
                 example_image=np.array(images[i]*255,dtype=np.uint8)
                 example_image=np.transpose(example_image,[1,2,0])
                 example_image=np.ascontiguousarray(example_image)
-                example_kps=np.array(kps[i][:136].reshape(-1,2))*128
+                example_kps=np.array(kps[i][:98*2].reshape(-1,2))*128
                 print(example_kps)
 
                 for _index in range(example_kps.shape[0]):
