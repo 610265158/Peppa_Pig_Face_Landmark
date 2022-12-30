@@ -244,27 +244,25 @@ class AlaskaDataIter():
 
         ######cla_label
         cla_label = np.zeros([4])
-        if np.sqrt(np.square(label[37, 0] - label[41, 0]) +
-                   np.square(label[37, 1] - label[41, 1])) / cfg.MODEL.hin < self.eye_close_thres \
-                or np.sqrt(np.square(label[38, 0] - label[40, 0]) +
-                           np.square(label[38, 1] - label[40, 1])) / cfg.MODEL.hin < self.eye_close_thres:
+        if np.sqrt(np.square(label[62, 0] - label[66, 0]) +
+                   np.square(label[62, 1] - label[66, 1])) / cfg.MODEL.hin < self.eye_close_thres:
             cla_label[0] = 1
-        if np.sqrt(np.square(label[43, 0] - label[47, 0]) +
-                   np.square(label[43, 1] - label[47, 1])) / cfg.MODEL.hin < self.eye_close_thres \
-                or np.sqrt(np.square(label[44, 0] - label[46, 0]) +
-                           np.square(label[44, 1] - label[46, 1])) / cfg.MODEL.hin < self.eye_close_thres:
+
+        if np.sqrt(np.square(label[70, 0] - label[74, 0]) +
+                   np.square(label[70, 1] - label[74, 1])) / cfg.MODEL.hin < self.eye_close_thres :
             cla_label[1] = 1
-        if np.sqrt(np.square(label[61, 0] - label[67, 0]) +
-                   np.square(label[61, 1] - label[67, 1])) / cfg.MODEL.hin < self.mouth_close_thres \
-                or np.sqrt(np.square(label[62, 0] - label[66, 0]) +
-                           np.square(label[62, 1] - label[66, 1])) / cfg.MODEL.hin < self.mouth_close_thres \
-                or np.sqrt(np.square(label[63, 0] - label[65, 0]) +
-                           np.square(label[63, 1] - label[65, 1])) / cfg.MODEL.hin < self.mouth_close_thres:
+
+        if np.sqrt(np.square(label[89, 0] - label[95, 0]) +
+                   np.square(label[89, 1] - label[95, 1])) / cfg.MODEL.hin < self.mouth_close_thres \
+                or np.sqrt(np.square(label[90, 0] - label[94, 0]) +
+                           np.square(label[90, 1] - label[94, 1])) / cfg.MODEL.hin < self.mouth_close_thres \
+                or np.sqrt(np.square(label[91, 0] - label[93, 0]) +
+                           np.square(label[91, 1] - label[93, 1])) / cfg.MODEL.hin < self.mouth_close_thres:
             cla_label[2] = 1
 
         ### mouth open big   1 mean true
-        if np.sqrt(np.square(label[62, 0] - label[66, 0]) +
-                   np.square(label[62, 1] - label[66, 1])) / cfg.MODEL.hin > self.big_mouth_open_thres:
+        if np.sqrt(np.square(label[90, 0] - label[94, 0]) +
+                   np.square(label[90, 1] - label[94, 1])) / cfg.MODEL.hin > self.big_mouth_open_thres:
             cla_label[3] = 1
 
         crop_image_height, crop_image_width, _ = crop_image.shape
@@ -273,8 +271,6 @@ class AlaskaDataIter():
 
         label[:, 0] = label[:, 0] / crop_image_width
         label[:, 1] = label[:, 1] / crop_image_height
-        crop_image = crop_image.astype(np.uint8)
-
 
         crop_image = crop_image.astype(np.float32)
 
@@ -283,7 +279,7 @@ class AlaskaDataIter():
         label = label.reshape([-1]).astype(np.float32)
         cla_label = cla_label.astype(np.float32)
 
-        print(label.shape)
+
         label = np.concatenate([label, PRY, cla_label], axis=0)
 
 

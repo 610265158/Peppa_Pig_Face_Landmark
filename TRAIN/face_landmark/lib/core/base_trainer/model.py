@@ -215,7 +215,7 @@ class Net(nn.Module):
         self.head=Heading(self.encoder_out_channels)
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self._fc = nn.Linear(512, 136+3+4, bias=True)
+        self.fc = nn.Linear(512, 98*2+3+4, bias=True)
 
     def forward(self, x):
         """Sequentially pass `x` trough model`s encoder, decoder and heads"""
@@ -229,10 +229,10 @@ class Net(nn.Module):
         fm=self._avg_pooling(encx16)
 
         fm = fm.view(bs, -1)
-        x = self._fc(fm)
+        x = self.fc(fm)
 
 
-        return x,[encx2,encx4,encx8,encx16]
+        return x,[encx16,x]
 
 
 
@@ -240,7 +240,7 @@ class TeacherNet(nn.Module):
     def __init__(self,):
         super(TeacherNet, self).__init__()
 
-        self.encoder = timm.create_model(model_name='tf_efficientnet_b0_ns',
+        self.encoder = timm.create_model(model_name='tf_efficientnet_b5_ns',
                                          pretrained=True,
                                          features_only=True,
                                          out_indices=[0,1,2,3],
@@ -248,12 +248,12 @@ class TeacherNet(nn.Module):
                                          in_chans=3,
                                          )
 
-        # self.encoder.out_channels=[3, 24 , 40, 64,176]
-        self.encoder.out_channels=[3,16, 24, 40, 112]
+        self.encoder.out_channels=[3, 24 , 40, 64,176]
+        # self.encoder.out_channels=[3,16, 24, 40, 112]
         self.head = Heading(self.encoder.out_channels)
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self._fc = nn.Linear(512, 136 + 3 + 4, bias=True)
+        self.fc = nn.Linear(512, 98*2 + 3 + 4, bias=True)
 
     def forward(self, x):
         """Sequentially pass `x` trough model`s encoder, decoder and heads"""
@@ -268,9 +268,9 @@ class TeacherNet(nn.Module):
 
         fm = fm.view(bs, -1)
 
-        x = self._fc(fm)
+        x = self.fc(fm)
 
-        return x,[encx2,encx4,encx8,encx16]
+        return x,[encx16,x]
 
 
 
@@ -323,25 +323,25 @@ class COTRAIN(nn.Module):
                                      w * torch.log(1.0 + absolute_x / epsilon)
 
         )
-        losses = losses * torch.tensor(cfg.DATA.weights, device='cuda')
-        loss = torch.sum(torch.mean(losses * weights, dim=[0]))
+
+        loss = torch.sum(torch.mean(losses , dim=[0]))
 
         return loss
     def loss(self,predict_keypoints, label_keypoints):
 
-        landmark_label = label_keypoints[:, 0:136]
-        pose_label = label_keypoints[:, 136:139]
-        leye_cls_label = label_keypoints[:, 139]
-        reye_cls_label = label_keypoints[:, 140]
-        mouth_cls_label = label_keypoints[:, 141]
-        big_mouth_cls_label = label_keypoints[:, 142]
+        landmark_label = label_keypoints[:, :98*2]
+        pose_label = label_keypoints[:, 196:199]
+        leye_cls_label = label_keypoints[:, 199]
+        reye_cls_label = label_keypoints[:, 200]
+        mouth_cls_label = label_keypoints[:, 201]
+        big_mouth_cls_label = label_keypoints[:, 202]
 
-        landmark_predict = predict_keypoints[:, 0:136]
-        pose_predict = predict_keypoints[:, 136:139]
-        leye_cls_predict = predict_keypoints[:, 139]
-        reye_cls_predict = predict_keypoints[:, 140]
-        mouth_cls_predict = predict_keypoints[:, 141]
-        big_mouth_cls_predict = predict_keypoints[:, 142]
+        landmark_predict = predict_keypoints[:, :98*2]
+        pose_predict = predict_keypoints[:, 196:199]
+        leye_cls_predict = predict_keypoints[:, 199]
+        reye_cls_predict = predict_keypoints[:, 200]
+        mouth_cls_predict = predict_keypoints[:, 201]
+        big_mouth_cls_predict = predict_keypoints[:, 202]
 
         loss = self._wing_loss(landmark_predict, landmark_label)
 
@@ -355,21 +355,18 @@ class COTRAIN(nn.Module):
         mouth_loss = mouth_loss + mouth_loss_big
 
 
-
         return loss + loss_pose + leye_loss + reye_loss + mouth_loss
-
-        return current_loss
 
 
     def forward(self, x,gt=None):
 
         student_pre,student_fms=self.student(x)
-
+        teacher_pre, teacher_fms = self.teacher(x)
         if self.inference:
 
-            return student_pre
+            return teacher_pre
 
-        teacher_pre,teacher_fms=self.teacher(x)
+
 
         distill_loss=self.distill_loss(student_fms,teacher_fms)
 
