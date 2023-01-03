@@ -361,10 +361,12 @@ class COTRAIN(nn.Module):
     def forward(self, x,gt=None):
 
         student_pre,student_fms=self.student(x)
+
         teacher_pre, teacher_fms = self.teacher(x)
+
         if self.inference:
 
-            return teacher_pre
+            return student_pre
 
 
 
@@ -374,7 +376,7 @@ class COTRAIN(nn.Module):
 
         teacher_loss=self.loss(teacher_pre,gt)
 
-        return student_loss,teacher_loss,distill_loss,student_pre
+        return student_loss,teacher_loss,distill_loss,student_pre,teacher_pre
 
 
 
@@ -393,7 +395,7 @@ if __name__=='__main__':
 
     model = COTRAIN(inference=True)
 
-    input = torch.randn(1, 3, 288, 160)
+    input = torch.randn(1, 3, 128, 128)
     flops, params = profile(model, inputs=(input,))
     print(flops/1024/1024)
 
