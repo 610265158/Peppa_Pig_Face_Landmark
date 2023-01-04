@@ -53,7 +53,7 @@ class FaceLandmark:
             landmark = self.interpreter.getSessionOutput(self.session).getData()
 
             state=landmark[-68:]
-            landmark=np.array(landmark)[:136].reshape(-1,2)
+            landmark=np.array(landmark)[:98*2].reshape(-1,2)
 
 
             landmark = self.postprocess(landmark, detail)

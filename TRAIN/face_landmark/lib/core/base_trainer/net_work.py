@@ -165,10 +165,17 @@ class Train(object):
 
         self.scaler = torch.cuda.amp.GradScaler()
 
+    def nme(self,target, preds):
+        target = torch.reshape(target, shape=[-1, 98, 2])
+        preds = torch.reshape(preds, shape=[-1, 98, 2])
 
+        norm = torch.linalg.norm(target[:, 60, :] - target[:, 72, :], dim=-1)
 
+        distance = torch.mean(torch.linalg.norm(preds - target, dim=-1), dim=-1) / norm
 
+        nme = torch.mean(distance)
 
+        return nme
 
 
     def metric(self,targets,preds ):
@@ -178,7 +185,8 @@ class Train(object):
 
         mad=torch.mean(torch.abs(preds-targets))
 
-        return mad,mse
+        nme=self.nme(targets,preds)
+        return mad,mse,nme
 
     def custom_loop(self):
         """Custom training and testing loop.
@@ -225,7 +233,7 @@ class Train(object):
 
                 with torch.cuda.amp.autocast(enabled=self.fp16):
 
-                    student_loss, teacher_loss, distill_loss,mate = self.model(data,kps)
+                    student_loss, teacher_loss, distill_loss,mate,_ = self.model(data,kps)
 
                     # calculate the final loss, backward the loss, and update the model
                     current_loss =  student_loss+ teacher_loss+ distill_loss
@@ -286,9 +294,11 @@ class Train(object):
 
         def distributed_test_epoch(epoch_num):
             summary_loss = AverageMeter()
-            summary_dice= AverageMeter()
-            summary_mad= AverageMeter()
-            summary_mse= AverageMeter()
+
+            summary_student_mad= AverageMeter()
+            summary_student_mse= AverageMeter()
+            summary_student_nme = AverageMeter()
+            summary_teacher_nme = AverageMeter()
 
 
             self.model.eval()
@@ -302,7 +312,7 @@ class Train(object):
 
                     batch_size = data.shape[0]
 
-                    loss,_,_,output = self.model(data,kps)
+                    loss,_,_,student_output,teacher_output = self.model(data,kps)
 
 
                     if self.ddp:
@@ -312,36 +322,40 @@ class Train(object):
 
 
 
-                    val_mad,val_mse =self.metric(kps[:,:136],output[:,:136])
+                    student_val_mad,student_val_mse,student_val_nme =self.metric(kps[:,:98*2],student_output[:,:98*2])
+                    teacher_val_mad, teacher_val_mse, teacher_val_nme = self.metric(kps[:, :98 * 2], teacher_output[:, :98 * 2])
 
                     if self.ddp:
 
-                        torch.distributed.all_reduce(val_mad.div_(torch.distributed.get_world_size()))
-                        torch.distributed.all_reduce(val_mse.div_(torch.distributed.get_world_size()))
+                        torch.distributed.all_reduce(student_val_mad.div_(torch.distributed.get_world_size()))
+                        torch.distributed.all_reduce(student_val_mse.div_(torch.distributed.get_world_size()))
+                        torch.distributed.all_reduce(student_val_nme.div_(torch.distributed.get_world_size()))
+                        torch.distributed.all_reduce(teacher_val_nme.div_(torch.distributed.get_world_size()))
 
-
-                    summary_mad.update(val_mad.detach().item(), batch_size)
-                    summary_mse.update(val_mse.detach().item(), batch_size)
+                    summary_student_mad.update(student_val_mad.detach().item(), batch_size)
+                    summary_student_mse.update(student_val_mse.detach().item(), batch_size)
+                    summary_student_nme.update(student_val_nme.detach().item(), batch_size)
+                    summary_teacher_nme.update(teacher_val_nme.detach().item(), batch_size)
 
                 if step % cfg.TRAIN.log_interval == 0:
 
                         log_message = '[fold %d], ' \
                                       'Val Step %d, ' \
                                       'summary_loss: %.6f, ' \
-                                      'summary_mad: %.6f, ' \
-                                      'summary_mse: %.6f, ' \
+                                      'student_summary_nme: %.6f, ' \
+                                      'teacher_summary_nme: %.6f, ' \
                                       'time: %.6f' % (
                                           self.fold,step,
                                           summary_loss.avg,
-                                          summary_mad.avg,
-                                          summary_mse.avg,
+                                          summary_student_nme.avg,
+                                          summary_teacher_nme.avg,
                                           time.time() - t)
 
                         logger.info(log_message)
 
 
 
-            return summary_loss,summary_mad,summary_mse
+            return summary_loss,summary_student_mad,summary_student_mse,summary_student_nme,summary_teacher_nme
 
 
 
@@ -373,19 +387,23 @@ class Train(object):
 
             if epoch%cfg.TRAIN.test_interval==0 and epoch>0 or epoch%10==0:
 
-                summary_loss ,summary_mad,summary_mse= distributed_test_epoch(epoch)
+                summary_loss ,summary_student_mad,summary_student_mse,summary_student_nme,summary_teacher_nme= distributed_test_epoch(epoch)
 
                 val_epoch_log_message = '[fold %d], ' \
                                         '[RESULT]: VAL. Epoch: %d,' \
                                         ' summary_loss: %.5f,' \
-                                        ' mad_score: %.5f,' \
-                                        ' mse_score: %.5f,' \
+                                        ' student_mad_score: %.5f,' \
+                                        ' student_mse_score: %.5f,' \
+                                        ' student_nme_score: %.5f,' \
+                                        ' teacher_nme_score: %.5f,' \
                                         ' time:%.5f' % (
                                             self.fold,
                                             epoch,
                                             summary_loss.avg,
-                                            summary_mad.avg,
-                                            summary_mse.avg,
+                                            summary_student_mad.avg,
+                                            summary_student_mse.avg,
+                                            summary_student_nme.avg,
+                                            summary_teacher_nme.avg,
                                             (time.time() - t))
 
                 logger.info(val_epoch_log_message)
@@ -400,10 +418,10 @@ class Train(object):
 
                 #### save the model every end of epoch
                 #### save the model every end of epoch
-                current_model_saved_name='./models/fold%d_epoch_%d_val_loss_%.6f_val_mse_%.6f.pth'%(self.fold,
+                current_model_saved_name='./models/fold%d_epoch_%d_val_loss_%.6f_val_nme_%.6f.pth'%(self.fold,
                                                                                                      epoch,
                                                                                                      summary_loss.avg,
-                                                                                                     summary_mse.avg,)
+                                                                                                     summary_student_nme.avg,)
                 logger.info('A model saved to %s' % current_model_saved_name)
                 #### save the model every end of epoch
                 if  self.ddp and torch.distributed.get_rank() == 0 :
@@ -450,23 +468,21 @@ class Train(object):
         # self.model.load_state_dict(state_dict,strict=False)
         self.model.eval()
         for id,images, kps in self.train_ds:
-
-
-
             for i in range(images.shape[0]):
 
                 example_image=np.array(images[i]*255,dtype=np.uint8)
                 example_image=np.transpose(example_image,[1,2,0])
                 example_image=np.ascontiguousarray(example_image)
-                example_kps=np.array(kps[i][:136].reshape(-1,2))*128
-                print(example_kps)
+                example_kps=np.array(kps[i][:98*2].reshape(-1,2))*128
+                print(kps[i])
 
                 for _index in range(example_kps.shape[0]):
                     x_y = example_kps[_index]
 
                     cv2.circle(example_image, (int(x_y[0] ),int(x_y[1] )),
-                               color=(255, 0, 0), radius=2, thickness=4)
-
+                               color=(255, 0, 0), radius=1, thickness=2)
+                    cv2.putText(example_image,  "{:2d}".format(_index), (int(x_y[0] ),int(x_y[1] )), cv2.FONT_HERSHEY_SIMPLEX,
+                                0.75, (0, 0, 0), thickness=2)
 
                 cv2.imshow('ss', example_image)
                 cv2.waitKey(0)

@@ -61,8 +61,8 @@ def get_head_pose(shape,img):
     # image_pts = np.float32([shape[17], shape[21], shape[22], shape[26], shape[36],
     #                         shape[39], shape[42], shape[45], shape[31], shape[35],
     #                         shape[48], shape[54], shape[57], shape[8]])
-    image_pts = np.float32([shape[17], shape[21], shape[22], shape[26], shape[36],
-                            shape[39], shape[42], shape[45], shape[31], shape[35]])
+    image_pts = np.float32([shape[33], shape[37], shape[42], shape[46], shape[60],
+                            shape[64], shape[68], shape[72], shape[55], shape[59]])
     _, rotation_vec, translation_vec = cv2.solvePnP(object_pts, image_pts, cam_matrix, dist_coeffs)
 
     reprojectdst, _ = cv2.projectPoints(reprojectsrc, rotation_vec, translation_vec, cam_matrix,
