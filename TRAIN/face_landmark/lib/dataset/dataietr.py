@@ -199,6 +199,9 @@ class AlaskaDataIter():
         joints[:, 0] = joints[:, 0] * cfg.MODEL.win
         joints[:, 1] = joints[:, 1] * cfg.MODEL.hin
         return img, joints
+
+
+    
     def single_map_func(self, dp, is_training):
         """Data augmentation function."""
         ####customed here
