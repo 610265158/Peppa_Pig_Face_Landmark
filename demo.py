@@ -15,49 +15,51 @@ def video(video_path_or_cam):
     while 1:
 
         ret, image = vide_capture.read()
-        pattern = np.zeros_like(image)
 
-        img_show = image.copy()
+        if ret:
+            pattern = np.zeros_like(image)
 
-        star=time.time()
-        boxes, landmarks, states = facer.run(image)
+            img_show = image.copy()
 
-        # print(states)
-        duration=time.time()-star
-        #print('one iamge cost %f s'%(duration))
+            star=time.time()
+            boxes, landmarks, states = facer.run(image)
 
-        fps=1/duration
-        cv2.putText(img_show, "X: " + "{:7.2f}".format(fps), (20, 20), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.75, (0, 0, 0), thickness=2)
-        for face_index in range(landmarks.shape[0]):
+            print(states)
+            duration=time.time()-star
+            #print('one iamge cost %f s'%(duration))
 
-            #######head pose need develop
-            #reprojectdst, euler_angle=get_head_pose(landmarks[face_index],img_show)
+            fps=1/duration
+            cv2.putText(img_show, "X: " + "{:7.2f}".format(fps), (20, 20), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.75, (0, 0, 0), thickness=2)
+            for face_index in range(landmarks.shape[0]):
+
+                #######head pose need develop
+                #reprojectdst, euler_angle=get_head_pose(landmarks[face_index],img_show)
+
+                if args.mask:
+                    face_bbox_keypoints = np.concatenate(
+                        (landmarks[face_index][:17, :], np.flip(landmarks[face_index][17:27, :], axis=0)), axis=0)
+
+                    pattern = cv2.fillPoly(pattern, [face_bbox_keypoints.astype(np.int)], (1., 1., 1.))
+
+                for landmarks_index in range(landmarks[face_index].shape[0]):
+
+                    x_y = landmarks[face_index][landmarks_index]
+
+                    cv2.circle(img_show, (int(x_y[0]), int(x_y[1])),
+                                   color=(0, 0, 255), radius=1, thickness=2)
+
+
+            cv2.namedWindow("capture", 0)
+            cv2.imshow("capture", img_show)
 
             if args.mask:
-                face_bbox_keypoints = np.concatenate(
-                    (landmarks[face_index][:17, :], np.flip(landmarks[face_index][17:27, :], axis=0)), axis=0)
+                cv2.namedWindow("masked", 0)
+                cv2.imshow("masked", image*pattern)
 
-                pattern = cv2.fillPoly(pattern, [face_bbox_keypoints.astype(np.int)], (1., 1., 1.))
-
-            for landmarks_index in range(landmarks[face_index].shape[0]):
-
-                x_y = landmarks[face_index][landmarks_index]
-
-                cv2.circle(img_show, (int(x_y[0]), int(x_y[1])),
-                               color=(0, 0, 255), radius=1, thickness=2)
-
-
-        cv2.namedWindow("capture", 0)
-        cv2.imshow("capture", img_show)
-
-        if args.mask:
-            cv2.namedWindow("masked", 0)
-            cv2.imshow("masked", image*pattern)
-
-        key=cv2.waitKey(1)
-        if key==ord('q'):
-            return
+            key=cv2.waitKey(1)
+            if key==ord('q'):
+                return
 
 
 def images(image_dir):

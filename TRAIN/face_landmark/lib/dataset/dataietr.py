@@ -31,7 +31,7 @@ cv2.ocl.setUseOpenCL(False)
 class AlaskaDataIter():
     def __init__(self, df,img_root,
                  training_flag=True,shuffle=True):
-        self.eye_close_thres = 0.02
+        self.eye_close_thres = 0.03
         self.mouth_close_thres = 0.02
         self.big_mouth_open_thres = 0.08
 
@@ -100,7 +100,7 @@ class AlaskaDataIter():
 
             # if bbox_width < 50 or bbox_height < 50:
             #     res_anns.remove(ann)
-
+            cnt=0
             left_eye_close = np.sqrt(
                 np.square(label[62, 0] - label[66, 0]) +
                 np.square(label[62, 1] - label[66, 1])) / bbox_height < self.eye_close_thres
@@ -110,8 +110,10 @@ class AlaskaDataIter():
                 np.square(label[70, 1] - label[74, 1])) / bbox_height < self.eye_close_thres
 
             if left_eye_close or right_eye_close:
-                for i in range(5):
+                for i in range(10):
                     expanded.append(cur_df)
+                lar_count += 1
+
 
             ##half face
             if np.sqrt(np.square(label[60, 0] - label[72, 0]) +
@@ -135,12 +137,13 @@ class AlaskaDataIter():
             if left_eye_close and not right_eye_close:
                 for i in range(20):
                     expanded.append(cur_df)
-                lar_count += 1
+
             if not left_eye_close and right_eye_close:
                 for i in range(20):
                     expanded.append(cur_df)
                 # lar_count += 15
 
+        print('close eyes ', lar_count)
 
         # print(lar_count)
         self.df+=expanded
@@ -225,15 +228,15 @@ class AlaskaDataIter():
 
             if random.uniform(0, 1) > 0.5:
                 crop_image, label = Mirror(crop_image, label=label, symmetry=cfg.DATA.symmetry)
-            if random.uniform(0, 1) > 0.0:
+            if random.uniform(0, 1) > 0.5:
                 angle = random.uniform(-45, 45)
                 crop_image, label = Rotate_aug(crop_image, label=label, angle=angle)
 
-            if random.uniform(0, 1) > 0.5:
+            if random.uniform(0, 1) > 0.3:
                 strength = random.uniform(0, 50)
                 crop_image, label = Affine_aug(crop_image, strength=strength, label=label)
 
-            if random.uniform(0, 1) > 0.5:
+            if random.uniform(0, 1) > 0.3:
                 crop_image = Padding_aug(crop_image, 0.3)
 
             transformed = self.train_trans(image=crop_image)

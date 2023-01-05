@@ -12,7 +12,6 @@ import timm
 from torchvision.models.mobilenetv3 import InvertedResidual,InvertedResidualConfig
 
 
-
 bn_momentum=0.1
 
 
@@ -56,7 +55,6 @@ class SeparableConv2d(nn.Module):
         return x
 
 
-
 class ASPPPooling(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(ASPPPooling, self).__init__()
@@ -77,9 +75,9 @@ class ASPPPooling(nn.Module):
 
 
 class ASPP(nn.Module):
-    def __init__(self, in_channels, atrous_rates):
+    def __init__(self, in_channels, atrous_rates,out_channels=512):
         super(ASPP, self).__init__()
-        out_channels = 512
+
 
         rate1, rate2, rate3 = tuple(atrous_rates)
 
@@ -163,39 +161,136 @@ class SCSEModule(nn.Module):
         return x  *self.cSE(x) +  x*self.sSE(x)
 
 
+class DecoderBlock(nn.Module):
+    def __init__(
+            self,
+            in_channels,
+            skip_channels,
+            out_channels,
+            use_separable_conv=True,
+            use_attention=False,
+            use_second_conv=False,
+            kernel_size=5,
+    ):
+        super().__init__()
+        if use_separable_conv:
+            self.conv1 = nn.Sequential(SeparableConv2d(
+                in_channels+skip_channels,
+                out_channels,
+                kernel_size=kernel_size,
+                padding=kernel_size//2,
+                ),
+                nn.BatchNorm2d(out_channels,momentum=bn_momentum),
+                nn.ReLU(inplace=True))
+        else:
+            self.conv1 = nn.Sequential(nn.Conv2d(
+                in_channels+skip_channels,
+                out_channels,
+                kernel_size=kernel_size,
+                padding=kernel_size//2,
+                ),
+                nn.BatchNorm2d(out_channels,momentum=bn_momentum),
+                nn.ReLU(inplace=True))
+
+        # self.attention1 = md.Attention(attention_type, in_channels=in_channels + skip_channels)
+        if use_second_conv:
+            self.conv2 = nn.Sequential(nn.Conv2d(
+                out_channels,
+                out_channels,
+                kernel_size=3,
+                padding=1),
+                nn.BatchNorm2d(out_channels,momentum=bn_momentum),
+                nn.ReLU(inplace=True))
+        else:
+            self.conv2 = nn.Identity()
+
+        if use_attention:
+            self.attention2 = SCSEModule(in_channels=out_channels)
+        else:
+            self.attention2 =nn.Identity()
+
+    def forward(self, x, skip=None):
+
+        # x= upsample_x_like_y(x,skip)
+        x = F.interpolate(x, scale_factor=2, mode='bilinear')
+        if skip is None:
+            return x
 
 
+        if skip is not None:
+            x = torch.cat([x, skip], dim=1)
+            # x = self.attention1(x)
+
+        x = self.conv1(x)
+        x = self.conv2(x)
+
+        x = self.attention2(x)
+        return x
 
 
-class Heading(nn.Module):
+def weight_init(m):
+    if isinstance(m, nn.Linear):
+        nn.init.xavier_normal_(m.weight)
+        nn.init.constant_(m.bias, 0)
+    # 涔熷彲浠ュ垽鏂槸鍚︿负conv2d锛屼娇鐢ㄧ浉搴旂殑鍒濆鍖栨柟寮�
+    elif isinstance(m, nn.Conv2d):
+        nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+     # 鏄惁涓烘壒褰掍竴鍖栧眰
+    elif isinstance(m, nn.BatchNorm2d):
+        nn.init.constant_(m.weight, 1)
+        nn.init.constant_(m.bias, 0)
+
+
+class Matting(nn.Module):
 
     def __init__(self,encoder_channels):
-        super(Heading, self).__init__()
+        super(Matting, self).__init__()
         self.extra_feature = FeatureFuc(encoder_channels[-1])
         self.aspp = ASPP(encoder_channels[-1], [2, 4, 8])
 
+        self.upsampler1=DecoderBlock(512, encoder_channels[-2], 64, \
+                                       use_separable_conv=True, \
+                                       use_attention=True,
+                                       kernel_size=5)
+
+        self.upsampler2 = DecoderBlock(64, encoder_channels[-3], 32, \
+                                       use_separable_conv=True, \
+                                       use_attention=False,
+                                       use_second_conv=True,
+                                       kernel_size=5)
+
+        self.upsampler3 = DecoderBlock(32, encoder_channels[-4], 16, \
+                                       use_separable_conv=True, \
+                                       use_attention=False,
+                                       kernel_size=3)
 
 
-
-
-
+        self.apply(weight_init)
     def forward(self,features):
 
+
+
         img,encx2,encx4,encx8,encx16=features
+
 
         ## add extra feature
         encx16=self.extra_feature(encx16)
         encx16=self.aspp(encx16)
 
-        return [encx2,encx4,encx8,encx16]
+        decx8=self.upsampler1(encx16,encx8)
+        decx4 = self.upsampler2(decx8, encx4)
+        decx2=self.upsampler3(decx4, encx2)
+
+        #### semantic predict
 
 
+        return[decx2,decx4,decx8,encx16]
 
 class Net(nn.Module):
     def __init__(self,):
         super(Net, self).__init__()
 
-        self.encoder = timm.create_model(model_name='mobilenetv3_large_100',
+        self.encoder = timm.create_model(model_name='mobilenetv3_large_100.miil_in21k_ft_in1k',
                                          pretrained=True,
                                          features_only=True,
                                          out_indices=[0,1,2,4],
@@ -208,31 +303,49 @@ class Net(nn.Module):
         self.encoder.blocks[5]=nn.Identity()
         self.encoder.blocks[6]=nn.Identity()
 
+        # print(self.encoder)
 
+
+        # shuffle=shufflenet_v2_x1_0(weights=torchvision.models.ShuffleNet_V2_X1_0_Weights)
+        #
+        # nodes, _ = get_graph_node_names(shuffle)
+        #
+        # self.encoder = create_feature_extractor(
+        #     shuffle, return_nodes=['conv1', 'maxpool', 'stage2', 'stage3'])
+        #
+        # # self.encoder=MobileNetV2Backbone(in_channels=3)
+        # self.encoder_out_channels=[3, 24,24,116, 232 ]  ##shufflenet1.0
         self.encoder_out_channels = [3, 16, 24, 40, 112] #mobilenetv3
+        # self.encoder.out_channels=[3,16, 24, 32, 88, 720]
 
 
-        self.head=Heading(self.encoder_out_channels)
+        self.matting=Matting(self.encoder_out_channels)
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self.fc = nn.Linear(512, 98*2+3+4, bias=True)
+        self.fc = nn.Linear(608, 98 * 2 + 3 + 4, bias=True)
 
+        weight_init(self.fc)
     def forward(self, x):
         """Sequentially pass `x` trough model`s encoder, decoder and heads"""
-
-        bs = x.size(0)
+        bs=x.size(0)
         features=self.encoder(x)
 
         features=[x]+features
 
-        [encx2,encx4,encx8,encx16]=self.head(features)
-        fm=self._avg_pooling(encx16)
+        [encx2,encx4,encx8,encx16]=self.matting(features)
+
+        fmx16 = self._avg_pooling(encx16)
+        fmx8 = self._avg_pooling(encx8)
+        fmx4 = self._avg_pooling(encx4)
+
+
+        fm=torch.cat([fmx4,fmx8,fmx16],dim=1)
 
         fm = fm.view(bs, -1)
         x = self.fc(fm)
 
 
-        return x,[encx16,x]
+        return x,[encx2,encx4,encx8,encx16,x]
 
 
 
@@ -240,37 +353,45 @@ class TeacherNet(nn.Module):
     def __init__(self,):
         super(TeacherNet, self).__init__()
 
-        self.encoder = timm.create_model(model_name='tf_efficientnet_b5_ns',
+        self.encoder = timm.create_model(model_name='efficientnet_b5.in12k_ft_in1k',
                                          pretrained=True,
                                          features_only=True,
                                          out_indices=[0,1,2,3],
                                          bn_momentum=bn_momentum,
                                          in_chans=3,
                                          )
+        # print(self.encoder)
+        # print(self.encoder.blocks[6])
 
+        # self.encoder.blocks[6]=torch.nn.Identity()
+        # self.encoder=MobileNetV2Backbone(in_channels=3)
         self.encoder.out_channels=[3, 24 , 40, 64,176]
-        # self.encoder.out_channels=[3,16, 24, 40, 112]
-        self.head = Heading(self.encoder.out_channels)
+        # self.encoder.out_channels=[3,16, 24, 32, 88, 720]
+
+        self.matting = Matting(self.encoder.out_channels)
+
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self.fc = nn.Linear(512, 98*2 + 3 + 4, bias=True)
-
+        self.fc = nn.Linear(608, 98 * 2 + 3 + 4, bias=True)
+        weight_init(self.fc)
     def forward(self, x):
         """Sequentially pass `x` trough model`s encoder, decoder and heads"""
-        bs = x.size(0)
+        bs=x.size(0)
         features=self.encoder(x)
 
         features=[x]+features
+        [encx2, encx4, encx8, encx16] = self.matting(features)
 
-        [encx2,encx4,encx8,encx16] = self.head(features)
+        fmx16 = self._avg_pooling(encx16)
+        fmx8 = self._avg_pooling(encx8)
+        fmx4 = self._avg_pooling(encx4)
 
-        fm = self._avg_pooling(encx16)
+        fm = torch.cat([fmx4, fmx8, fmx16], dim=1)
 
         fm = fm.view(bs, -1)
-
         x = self.fc(fm)
 
-        return x,[encx16,x]
+        return x, [encx2, encx4, encx8, encx16, x]
 
 
 
@@ -365,7 +486,7 @@ class COTRAIN(nn.Module):
         teacher_pre, teacher_fms = self.teacher(x)
 
         if self.inference:
-
+            student_pre[:,-4:]=torch.nn.Sigmoid()(student_pre[:,-4:])
             return student_pre
 
 
@@ -391,7 +512,7 @@ if __name__=='__main__':
 
     from thop import profile
 
-    dummy_x = torch.randn(1, 3, 288, 160, device='cpu')
+    # dummy_x = torch.randn(1, 3, 288, 160, device='cpu')
 
     model = COTRAIN(inference=True)
 
