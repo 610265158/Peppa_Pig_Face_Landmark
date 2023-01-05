@@ -17,9 +17,9 @@ import cv2
 from train_config import config as cfg
 cfg.TRAIN.batch_size=1
 
-
-df=pd.read_csv(cfg.DATA.val_f_path)
-val_genererator = AlaskaDataIter(df,
+with open(cfg.DATA.val_f_path, mode='r') as f:
+    val_df = f.readlines()
+val_genererator = AlaskaDataIter(val_df,
                     img_root=cfg.DATA.root_path,
                     training_flag=False, shuffle=False)
 val_ds=DataLoader(val_genererator,
