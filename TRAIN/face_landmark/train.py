@@ -23,13 +23,16 @@ setproctitle.setproctitle("kps")
 
 
 def main():
-
-
-
-
+    extra=cfg.DATA.extra_data
     with open(cfg.DATA.train_f_path,mode='r') as f:
         train_df=f.readlines()
 
+    if extra:
+        with open('extradate.txt', mode='r') as f:
+            extra_df = f.readlines()
+            train_df+=extra_df
+            # train_df=extra_df
+            # print(train_df[-1])
     with open(cfg.DATA.val_f_path,mode='r') as f:
         val_df=f.readlines()
 
@@ -43,4 +46,3 @@ def main():
 
 if __name__=='__main__':
     main()
-
