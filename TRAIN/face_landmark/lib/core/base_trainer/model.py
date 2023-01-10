@@ -232,10 +232,10 @@ def weight_init(m):
     if isinstance(m, nn.Linear):
         nn.init.xavier_normal_(m.weight)
         nn.init.constant_(m.bias, 0)
-    # 涔熷彲浠ュ垽鏂槸鍚︿负conv2d锛屼娇鐢ㄧ浉搴旂殑鍒濆鍖栨柟寮�
+
     elif isinstance(m, nn.Conv2d):
         nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-     # 鏄惁涓烘壒褰掍竴鍖栧眰
+
     elif isinstance(m, nn.BatchNorm2d):
         nn.init.constant_(m.weight, 1)
         nn.init.constant_(m.bias, 0)
@@ -259,8 +259,8 @@ class Matting(nn.Module):
                                        use_second_conv=True,
                                        kernel_size=5)
 
-        self.upsampler3 = DecoderBlock(32, encoder_channels[-4], 16, \
-                                       use_separable_conv=True, \
+        self.upsampler3 = DecoderBlock(32, encoder_channels[-4], 32, \
+                                       use_separable_conv=False, \
                                        use_attention=False,
                                        kernel_size=3)
 
@@ -271,7 +271,6 @@ class Matting(nn.Module):
 
 
         img,encx2,encx4,encx8,encx16=features
-
 
         ## add extra feature
         encx16=self.extra_feature(encx16)
@@ -290,7 +289,7 @@ class Net(nn.Module):
     def __init__(self,):
         super(Net, self).__init__()
 
-        self.encoder = timm.create_model(model_name='mobilenetv3_large_100.miil_in21k_ft_in1k',
+        self.encoder = timm.create_model(model_name='mobilenetv3_large_100.ra_in1k',
                                          pretrained=True,
                                          features_only=True,
                                          out_indices=[0,1,2,4],
@@ -322,9 +321,14 @@ class Net(nn.Module):
         self.matting=Matting(self.encoder_out_channels)
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self.fc = nn.Linear(608, 98 * 2 + 3 + 4, bias=True)
+        self.fc = nn.Linear(640, 98 * 2 + 3 + 4, bias=True)
+
+
+        self.hm=nn.Conv2d(in_channels=32,out_channels=98,kernel_size=3,stride=1,padding=1,bias=True)
+
 
         weight_init(self.fc)
+        weight_init(self.hm)
     def forward(self, x):
         """Sequentially pass `x` trough model`s encoder, decoder and heads"""
         bs=x.size(0)
@@ -337,15 +341,19 @@ class Net(nn.Module):
         fmx16 = self._avg_pooling(encx16)
         fmx8 = self._avg_pooling(encx8)
         fmx4 = self._avg_pooling(encx4)
+        fmx2 = self._avg_pooling(encx2)
 
 
-        fm=torch.cat([fmx4,fmx8,fmx16],dim=1)
+
+        fm=torch.cat([fmx2,fmx4,fmx8,fmx16],dim=1)
 
         fm = fm.view(bs, -1)
         x = self.fc(fm)
 
+        hm=self.hm(encx2)
 
-        return x,[encx2,encx4,encx8,encx16,x]
+
+        return x,hm,[encx2,encx4,encx8,encx16,x]
 
 
 
@@ -372,8 +380,12 @@ class TeacherNet(nn.Module):
 
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self.fc = nn.Linear(608, 98 * 2 + 3 + 4, bias=True)
+        self.fc = nn.Linear(640, 98 * 2 + 3 + 4, bias=True)
+
+        self.hm = nn.Conv2d(in_channels=32, out_channels=98, kernel_size=3, stride=1, padding=1, bias=True)
+
         weight_init(self.fc)
+        weight_init(self.hm)
     def forward(self, x):
         """Sequentially pass `x` trough model`s encoder, decoder and heads"""
         bs=x.size(0)
@@ -382,16 +394,19 @@ class TeacherNet(nn.Module):
         features=[x]+features
         [encx2, encx4, encx8, encx16] = self.matting(features)
 
+
         fmx16 = self._avg_pooling(encx16)
         fmx8 = self._avg_pooling(encx8)
         fmx4 = self._avg_pooling(encx4)
-
-        fm = torch.cat([fmx4, fmx8, fmx16], dim=1)
+        fmx2 = self._avg_pooling(encx2)
+        fm = torch.cat([fmx2,fmx4, fmx8, fmx16], dim=1)
 
         fm = fm.view(bs, -1)
         x = self.fc(fm)
 
-        return x, [encx2, encx4, encx8, encx16, x]
+        hm = self.hm(encx2)
+
+        return x,hm, [encx2, encx4, encx8, encx16, x]
 
 
 
@@ -406,7 +421,7 @@ class COTRAIN(nn.Module):
         self.MSELoss=nn.MSELoss()
 
         # self.DiceLoss    = segmentation_models_pytorch.losses.DiceLoss(mode='multilabel',eps=1e-5)
-        self.BCELoss     = nn.BCEWithLogitsLoss()
+        self.BCELoss     = nn.BCEWithLogitsLoss(reduce=False)
 
 
         self.act=nn.Sigmoid()
@@ -445,57 +460,116 @@ class COTRAIN(nn.Module):
 
         )
 
+
+        losses=losses*weights
         loss = torch.sum(torch.mean(losses , dim=[0]))
 
         return loss
+
+
     def loss(self,predict_keypoints, label_keypoints):
 
         landmark_label = label_keypoints[:, :98*2]
         pose_label = label_keypoints[:, 196:199]
-        leye_cls_label = label_keypoints[:, 199]
-        reye_cls_label = label_keypoints[:, 200]
-        mouth_cls_label = label_keypoints[:, 201]
-        big_mouth_cls_label = label_keypoints[:, 202]
+
+        cls_label=label_keypoints[:,199:199+4]
+        # leye_cls_label = label_keypoints[:, 199]
+        # reye_cls_label = label_keypoints[:, 200]
+        # mouth_cls_label = label_keypoints[:, 201]
+        # big_mouth_cls_label = label_keypoints[:, 202]
+
+        landmark_weights=label_keypoints[:,199+4:199+4+196]
+
+        cls_weights = label_keypoints[:, -4:]
+
+
 
         landmark_predict = predict_keypoints[:, :98*2]
         pose_predict = predict_keypoints[:, 196:199]
-        leye_cls_predict = predict_keypoints[:, 199]
-        reye_cls_predict = predict_keypoints[:, 200]
-        mouth_cls_predict = predict_keypoints[:, 201]
-        big_mouth_cls_predict = predict_keypoints[:, 202]
+        # leye_cls_predict = predict_keypoints[:, 199]
+        # reye_cls_predict = predict_keypoints[:, 200]
+        # mouth_cls_predict = predict_keypoints[:, 201]
+        # big_mouth_cls_predict = predict_keypoints[:, 202]
+        cls_label_predict= predict_keypoints[:, 199:199+4]
 
-        loss = self._wing_loss(landmark_predict, landmark_label)
+
+        loss = self._wing_loss(landmark_predict, landmark_label,weights=landmark_weights)
 
         loss_pose = self.MSELoss(pose_predict, pose_label)
 
-        leye_loss =  self.BCELoss  (leye_cls_predict, leye_cls_label)
-        reye_loss =  self.BCELoss  (reye_cls_predict, reye_cls_label)
-
-        mouth_loss =  self.BCELoss  (mouth_cls_predict, mouth_cls_label)
-        mouth_loss_big =  self.BCELoss  (big_mouth_cls_predict, big_mouth_cls_label)
-        mouth_loss = mouth_loss + mouth_loss_big
+        cls_loss=self.BCELoss  ( cls_label_predict,cls_label)
+        cls_loss=cls_loss*cls_weights
 
 
-        return loss + loss_pose + leye_loss + reye_loss + mouth_loss
 
 
-    def forward(self, x,gt=None):
+        cls_loss=torch.sum(cls_loss)/torch.sum(cls_weights)
 
-        student_pre,student_fms=self.student(x)
+        # leye_loss =  self.BCELoss  (leye_cls_predict, leye_cls_label)
+        # reye_loss =  self.BCELoss  (reye_cls_predict, reye_cls_label)
+        #
+        # mouth_loss =  self.BCELoss  (mouth_cls_predict, mouth_cls_label)
+        # mouth_loss_big =  self.BCELoss  (big_mouth_cls_predict, big_mouth_cls_label)
+        # mouth_loss = mouth_loss + mouth_loss_big
 
-        teacher_pre, teacher_fms = self.teacher(x)
+
+        return loss + loss_pose + cls_loss
+
+    def hm_loss(self,predict_hm, label_hm):
+
+
+        hm_loss =  self.BCELoss  (predict_hm, label_hm)
+
+        hm_loss=torch.mean(hm_loss)
+        return hm_loss
+
+
+
+
+
+    def postp(self,hm):
+        bs=hm.size(0)
+        print(hm.size())
+        hm=hm.reshape([bs,98,-1])
+
+        hm=torch.argmax(hm,dim=2)
+
+
+        X=hm%64
+        Y=hm//64
+
+
+        loc=torch.stack([X,Y],dim=2).float()/64
+
+
+        return loc
+    def forward(self, x,gt=None,gt_hm=None):
+
+        student_pre,student_hm,student_fms=self.student(x)
+
+        teacher_pre,teacher_hm, teacher_fms = self.teacher(x)
+
+
 
         if self.inference:
-            student_pre[:,-4:]=torch.nn.Sigmoid()(student_pre[:,-4:])
-            return student_pre
+            teacher_pre[:,-4:]=torch.nn.Sigmoid()(teacher_pre[:,-4:])
+            # teacher_hm = torch.nn.Sigmoid()(teacher_hm)
+            #
+            # loc=self.postp(teacher_hm)
 
-
+            return teacher_pre#,student_hm
 
         distill_loss=self.distill_loss(student_fms,teacher_fms)
 
         student_loss=self.loss(student_pre,gt)
 
+        student_hm_loss=self.hm_loss(student_hm,gt_hm)
+
+        student_loss=student_loss+student_hm_loss
         teacher_loss=self.loss(teacher_pre,gt)
+
+        teacher_hm_loss = self.hm_loss(teacher_hm, gt_hm)
+        teacher_loss=teacher_loss+teacher_hm_loss
 
         return student_loss,teacher_loss,distill_loss,student_pre,teacher_pre
 

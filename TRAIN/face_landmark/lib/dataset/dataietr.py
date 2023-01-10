@@ -58,6 +58,7 @@ class AlaskaDataIter():
                                     A.OneOf([A.GaussNoise(),
                                              A.ISONoise()],
                                             p=0.1),
+
         ])
 
 
@@ -112,7 +113,7 @@ class AlaskaDataIter():
             if left_eye_close or right_eye_close:
                 for i in range(10):
                     expanded.append(cur_df)
-                lar_count += 1
+                # lar_count += 1
 
 
             ##half face
@@ -137,15 +138,14 @@ class AlaskaDataIter():
             if left_eye_close and not right_eye_close:
                 for i in range(20):
                     expanded.append(cur_df)
-
+                lar_count += 1
             if not left_eye_close and right_eye_close:
                 for i in range(20):
                     expanded.append(cur_df)
-                # lar_count += 15
+                lar_count += 1
 
-        print('close eyes ', lar_count)
 
-        # print(lar_count)
+        print(lar_count)
         self.df+=expanded
         logger.info('befor balance the dataset contains %d images' % (len(df)))
         logger.info('after balanced the datasets contains %d samples' % (len(self.df)))
@@ -203,17 +203,77 @@ class AlaskaDataIter():
         joints[:, 1] = joints[:, 1] * cfg.MODEL.hin
         return img, joints
 
+    def gaussian_k(self,x0, y0, sigma, width, height):
+        """ Make a square gaussian kernel centered at (x0, y0) with sigma as SD.
+        """
+        x = np.arange(0, width, 1, float)  ## (width,)
+        y = np.arange(0, height, 1, float)[:, np.newaxis]  ## (height,1)
+        return np.exp(-((x - x0) ** 2 + (y - y0) ** 2) / (2 * sigma ** 2))
 
-    
+    def generate_hm(self,height, width, landmarks, s=3):
+        """ Generate a full Heap Map for every landmarks in an array
+        Args:
+            height    : The height of Heat Map (the height of target output)
+            width     : The width  of Heat Map (the width of target output)
+            joints    : [(x1,y1),(x2,y2)...] containing landmarks
+            maxlenght : Lenght of the Bounding Box
+        """
+        Nlandmarks = len(landmarks)
+        hm = np.zeros((height, width, Nlandmarks), dtype=np.float32)
+        for i in range(Nlandmarks):
+            # if not np.array_equal(landmarks[i], [-1, -1]):
+
+            hm[:, :, i] = self.gaussian_k(landmarks[i][0],
+                                     landmarks[i][1],
+                                     s, height, width)
+            # else:
+            #     hm[:, :, i] = np.zeros((height, width))
+        return hm
+
+
+    def doeys(self,img,kps):
+
+        if random.uniform(0,1)<0.5:
+            eye_region=kps[60:67,:]
+            weights_labelel=[0,1]
+
+        else:
+
+            eye_region = kps[68:75, :]
+            weights_labelel = [1,0]
+
+
+
+        xmin = int(np.clip(np.min(eye_region[:,0])-5,0,128))
+        ymin = int(np.clip(np.min(eye_region[:, 1])-5,0,128))
+        xmax = int(np.clip(np.max(eye_region[:, 0])+5,0,128))
+        ymax = int( np.clip(np.max(eye_region[:, 1])+5,0,128))
+
+
+        img[ymin:ymax,xmin:xmax,:]=0
+
+        return img,weights_labelel
+
+
+
+
+
     def single_map_func(self, dp, is_training):
         """Data augmentation function."""
         ####customed here
 
-        dp=dp.split()
-        kps=dp[:98*2]
-        fn=dp[-1]
 
-        image=cv2.imread(os.path.join(self.img_root_path,fn))
+        if 'wink' in dp:
+            dp = dp.split()
+            kps = dp[:98 * 2]
+            fn = dp[-1]
+            image = cv2.imread( fn)
+
+        else:
+            dp=dp.split()
+            kps=dp[:98*2]
+            fn=dp[-1]
+            image=cv2.imread(os.path.join(self.img_root_path,fn))
 
         kps=np.array(kps,dtype=np.float32).reshape([-1,2])
         bbox = [float(np.min(kps[:, 0])), float(np.min(kps[:, 1])), float(np.max(kps[:, 0])),
@@ -242,21 +302,21 @@ class AlaskaDataIter():
             transformed = self.train_trans(image=crop_image)
             crop_image = transformed['image']
 
-
-
         #######head pose
         reprojectdst, euler_angle = get_head_pose(label, crop_image)
         PRY = euler_angle.reshape([-1]).astype(np.float32) / 90.
 
         ######cla_label
-        cla_label = np.zeros([4])
+        cls_label = np.zeros([4])
         if np.sqrt(np.square(label[62, 0] - label[66, 0]) +
                    np.square(label[62, 1] - label[66, 1])) / cfg.MODEL.hin < self.eye_close_thres:
-            cla_label[0] = 1
+            cls_label[0] = 1
 
         if np.sqrt(np.square(label[70, 0] - label[74, 0]) +
                    np.square(label[70, 1] - label[74, 1])) / cfg.MODEL.hin < self.eye_close_thres :
-            cla_label[1] = 1
+            cls_label[1] = 1
+
+
 
         if np.sqrt(np.square(label[89, 0] - label[95, 0]) +
                    np.square(label[89, 1] - label[95, 1])) / cfg.MODEL.hin < self.mouth_close_thres \
@@ -264,12 +324,38 @@ class AlaskaDataIter():
                            np.square(label[90, 1] - label[94, 1])) / cfg.MODEL.hin < self.mouth_close_thres \
                 or np.sqrt(np.square(label[91, 0] - label[93, 0]) +
                            np.square(label[91, 1] - label[93, 1])) / cfg.MODEL.hin < self.mouth_close_thres:
-            cla_label[2] = 1
+            cls_label[2] = 1
 
         ### mouth open big   1 mean true
         if np.sqrt(np.square(label[90, 0] - label[94, 0]) +
                    np.square(label[90, 1] - label[94, 1])) / cfg.MODEL.hin > self.big_mouth_open_thres:
-            cla_label[3] = 1
+            cls_label[3] = 1
+
+
+
+
+        if is_training:
+            kps_weight = np.ones_like(label)
+            cls_weight = np.ones_like(cls_label)
+            if random.uniform(0,1)>0.5:
+
+                crop_image,weights=self.doeys(crop_image,label)
+
+                if weights==[0,1]:
+                    kps_weight[60:67,:]=0
+                    cls_weight[0]=0
+                else:
+                    kps_weight[68:75, :] = 0
+                    cls_weight[1] = 0
+
+        else:
+            kps_weight = np.ones_like(label)
+            cls_weight = np.ones_like(cls_label)
+
+
+
+
+
 
         crop_image_height, crop_image_width, _ = crop_image.shape
 
@@ -277,16 +363,23 @@ class AlaskaDataIter():
 
         label[:, 0] = label[:, 0] / crop_image_width
         label[:, 1] = label[:, 1] / crop_image_height
-
         crop_image = crop_image.astype(np.float32)
 
         crop_image = np.transpose(crop_image, axes=[2, 0, 1])
-        crop_image/=255.
+        crop_image /= 255.
+
+
         label = label.reshape([-1]).astype(np.float32)
-        cla_label = cla_label.astype(np.float32)
+        kps_weight= kps_weight.reshape([-1]).astype(np.float32)
+        cls_label = cls_label.astype(np.float32)
+        cls_weight= cls_weight.astype(np.float32)
+
+        total_label = np.concatenate([label, PRY, cls_label,kps_weight,cls_weight], axis=0)
 
 
-        label = np.concatenate([label, PRY, cla_label], axis=0)
+        kps=label.reshape([-1,2])*64
 
+        hm=self.generate_hm(64,64,kps,3)
 
-        return fn,crop_image,label
+        hm = np.transpose(hm, axes=[2, 0, 1])
+        return fn,crop_image,total_label,hm
