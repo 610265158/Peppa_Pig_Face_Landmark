@@ -59,8 +59,7 @@ boxes, landmarks, states = facer.run(image)
 
 ##  Train
 
-The face landmarks training codes are placed in sub folder ./TRAIN/face_landmark
+The face landmarks  training codes are placed in sub folder ```./TRAIN/face_landmark```
 
-If you want to train the model ,please work in the sub folder ,refer to ./TRAIN/face_landmark/README.md
-
+If you want to train the model ,please work in the sub folder ,refer to ```./TRAIN/face_landmark/README.md```
 
