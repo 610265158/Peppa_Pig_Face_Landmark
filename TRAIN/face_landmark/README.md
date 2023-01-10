@@ -22,7 +22,19 @@ demo pictures:
 
 this gif is from github.com/610265158/Peppa_Pig_Face_Engine )
 
-pretrained model is placed in pretrained, in Peppa_Pig_Face_Engine folder.
+pretrained model is placed in pretrained, in Peppa_Pig_Face_Landmark folder.
+
+
+
+## metric
+
+WLFW test set.
+
+| model   | NME  | model size (int8 weights) |
+| ------- | ---- | ------------------------- |
+| Student | 5.03 | 2.0M                      |
+| Teacher | 4.65 | 7.5M                      |
+|         |      |                           |
 
 
 
