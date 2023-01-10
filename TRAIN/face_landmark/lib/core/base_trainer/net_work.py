@@ -211,7 +211,7 @@ class Train(object):
             self.model.train()
 
 
-            for k,(ids,images, kps) in enumerate(self.train_ds):
+            for k,(ids,images, kps,hms) in enumerate(self.train_ds):
 
                 if epoch_num<10:
                     ###excute warm up in the first epoch
@@ -227,13 +227,13 @@ class Train(object):
 
                 data = images.to(self.device).float()
                 kps = kps.to(self.device).float()
-
+                hms= hms.to(self.device).float()
                 batch_size = data.shape[0]
                 ###
 
                 with torch.cuda.amp.autocast(enabled=self.fp16):
 
-                    student_loss, teacher_loss, distill_loss,mate,_ = self.model(data,kps)
+                    student_loss, teacher_loss, distill_loss,mate,_ = self.model(data,kps,hms)
 
                     # calculate the final loss, backward the loss, and update the model
                     current_loss =  student_loss+ teacher_loss+ distill_loss
@@ -305,14 +305,14 @@ class Train(object):
             t = time.time()
 
             with torch.no_grad():
-                for step,(ids,images,kps) in enumerate(self.val_ds):
+                for step,(ids,images,kps,hms) in enumerate(self.val_ds):
 
                     data = images.to(self.device).float()
                     kps = kps.to(self.device).float()
-
+                    hms= hms.to(self.device).float()
                     batch_size = data.shape[0]
 
-                    loss,_,_,student_output,teacher_output = self.model(data,kps)
+                    loss,_,_,student_output,teacher_output = self.model(data,kps,hms)
 
 
                     if self.ddp:
@@ -467,14 +467,18 @@ class Train(object):
         # state_dict=torch.load('/Users/liangzi/Downloads/fold1_epoch_29_val_loss_0.049467_val_dice_0.964158.pth', map_location=self.device)
         # self.model.load_state_dict(state_dict,strict=False)
         self.model.eval()
-        for id,images, kps in self.train_ds:
+        for id,images, kps,hms in self.train_ds:
+
+            print(hms.shape)
             for i in range(images.shape[0]):
 
                 example_image=np.array(images[i]*255,dtype=np.uint8)
                 example_image=np.transpose(example_image,[1,2,0])
                 example_image=np.ascontiguousarray(example_image)
                 example_kps=np.array(kps[i][:98*2].reshape(-1,2))*128
+                example_hms = np.array(hms[i])
                 print(kps[i])
+
 
                 for _index in range(example_kps.shape[0]):
                     x_y = example_kps[_index]
@@ -483,7 +487,7 @@ class Train(object):
                                color=(255, 0, 0), radius=1, thickness=2)
                     cv2.putText(example_image,  "{:2d}".format(_index), (int(x_y[0] ),int(x_y[1] )), cv2.FONT_HERSHEY_SIMPLEX,
                                 0.75, (0, 0, 0), thickness=2)
-
+                cv2.imshow('example_hms', example_hms[:,:,0])
                 cv2.imshow('ss', example_image)
                 cv2.waitKey(0)
 
