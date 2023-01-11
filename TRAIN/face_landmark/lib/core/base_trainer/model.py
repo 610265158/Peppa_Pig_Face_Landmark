@@ -98,16 +98,16 @@ class ASPP(nn.Module):
             nn.ReLU(inplace=True)
         )
 
-        self.fm_convx3_rate8=nn.Sequential(
-            nn.Conv2d(in_channels, out_channels//4, kernel_size=3, padding=8, bias=False,dilation=rate3),
-            nn.BatchNorm2d(out_channels//4,momentum=bn_momentum),
-            nn.ReLU(inplace=True)
-        )
+        # self.fm_convx3_rate8=nn.Sequential(
+        #     nn.Conv2d(in_channels, out_channels//4, kernel_size=3, padding=8, bias=False,dilation=rate3),
+        #     nn.BatchNorm2d(out_channels//4,momentum=bn_momentum),
+        #     nn.ReLU(inplace=True)
+        # )
 
         self.fm_pool=ASPPPooling(in_channels=in_channels,out_channels=out_channels//4)
 
         self.project = nn.Sequential(
-            nn.Conv2d(out_channels//4*5, out_channels, 1, bias=False),
+            nn.Conv2d(out_channels//4*4, out_channels, 1, bias=False),
             nn.BatchNorm2d(out_channels,momentum=bn_momentum),
             nn.ReLU(inplace=True))
 
@@ -116,10 +116,10 @@ class ASPP(nn.Module):
         fm1=self.fm_conx1(x)
         fm2=self.fm_convx3_rate2(x)
         fm4=self.fm_convx3_rate4(x)
-        fm8=self.fm_convx3_rate8(x)
+        # fm8=self.fm_convx3_rate8(x)
         fm_pool=self.fm_pool(x)
 
-        res = torch.cat([fm1,fm2,fm4,fm8,fm_pool], dim=1)
+        res = torch.cat([fm1,fm2,fm4,fm_pool], dim=1)
 
         return self.project(res)
 
@@ -420,8 +420,8 @@ class COTRAIN(nn.Module):
 
         self.MSELoss=nn.MSELoss()
 
-        # self.DiceLoss    = segmentation_models_pytorch.losses.DiceLoss(mode='multilabel',eps=1e-5)
-        self.BCELoss     = nn.BCEWithLogitsLoss(reduce=False)
+
+        self.BCELoss     = nn.BCEWithLogitsLoss(reduction='none')
 
 
         self.act=nn.Sigmoid()
@@ -517,10 +517,11 @@ class COTRAIN(nn.Module):
 
     def hm_loss(self,predict_hm, label_hm):
 
+        bs=label_hm.size(0)
+        
+        hm_loss =  self.BCELoss(predict_hm, label_hm)
 
-        hm_loss =  self.BCELoss  (predict_hm, label_hm)
-
-        hm_loss=torch.mean(hm_loss)
+        hm_loss=torch.sum(hm_loss)/bs/64./64.
         return hm_loss
 
 
@@ -538,7 +539,6 @@ class COTRAIN(nn.Module):
         X=hm%64
         Y=hm//64
 
-
         loc=torch.stack([X,Y],dim=2).float()/64
 
 
@@ -552,12 +552,12 @@ class COTRAIN(nn.Module):
 
 
         if self.inference:
-            teacher_pre[:,-4:]=torch.nn.Sigmoid()(teacher_pre[:,-4:])
+            # teacher_pre[:,-4:]=torch.nn.Sigmoid()(teacher_pre[:,-4:])
             # teacher_hm = torch.nn.Sigmoid()(teacher_hm)
             #
             # loc=self.postp(teacher_hm)
 
-            return teacher_pre#,student_hm
+            return student_pre#,teacher_hm
 
         distill_loss=self.distill_loss(student_fms,teacher_fms)
 
