@@ -106,7 +106,8 @@ class Train(object):
         #### make the device
 
 
-        self.model = COTRAIN().to(self.device)
+        self.model_inp_size=(cfg.MODEL.hin,cfg.MODEL.win)
+        self.model = COTRAIN(inp_size=self.model_inp_size).to(self.device)
 
         self.load_weight()
         # self.model = nn.SyncBatchNorm.convert_sync_batchnorm(self.model)

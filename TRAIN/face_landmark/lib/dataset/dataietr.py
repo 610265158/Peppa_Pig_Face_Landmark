@@ -244,10 +244,10 @@ class AlaskaDataIter():
 
 
 
-        xmin = int(np.clip(np.min(eye_region[:,0])-5,0,128))
-        ymin = int(np.clip(np.min(eye_region[:, 1])-5,0,128))
-        xmax = int(np.clip(np.max(eye_region[:, 0])+5,0,128))
-        ymax = int( np.clip(np.max(eye_region[:, 1])+5,0,128))
+        xmin = int(np.clip(np.min(eye_region[:,0])-10,0,128))
+        ymin = int(np.clip(np.min(eye_region[:, 1])-10,0,128))
+        xmax = int(np.clip(np.max(eye_region[:, 0])+10,0,128))
+        ymax = int( np.clip(np.max(eye_region[:, 1])+10,0,128))
 
 
         img[ymin:ymax,xmin:xmax,:]=0
@@ -292,11 +292,11 @@ class AlaskaDataIter():
                 angle = random.uniform(-45, 45)
                 crop_image, label = Rotate_aug(crop_image, label=label, angle=angle)
 
-            if random.uniform(0, 1) > 0.3:
+            if random.uniform(0, 1) > 0.7:
                 strength = random.uniform(0, 50)
                 crop_image, label = Affine_aug(crop_image, strength=strength, label=label)
 
-            if random.uniform(0, 1) > 0.3:
+            if random.uniform(0, 1) > 0.7:
                 crop_image = Padding_aug(crop_image, 0.3)
 
             transformed = self.train_trans(image=crop_image)
@@ -377,6 +377,8 @@ class AlaskaDataIter():
         total_label = np.concatenate([label, PRY, cls_label,kps_weight,cls_weight], axis=0)
 
 
+
+        ### hm size 64x64
         kps=label.reshape([-1,2])*64
 
         hm=self.generate_hm(64,64,kps,3)

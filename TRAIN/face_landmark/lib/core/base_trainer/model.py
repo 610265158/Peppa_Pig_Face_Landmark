@@ -16,6 +16,7 @@ bn_momentum=0.1
 
 
 
+
 def upsample_x_like_y(x,y):
     size = y.shape[-2:]
     x=F.interpolate(x, size=size, mode='bilinear')
@@ -286,9 +287,11 @@ class Matting(nn.Module):
         return[decx2,decx4,decx8,encx16]
 
 class Net(nn.Module):
-    def __init__(self,):
+    def __init__(self,inp_size=(128,128)):
         super(Net, self).__init__()
 
+
+        self.input_size=inp_size
         self.encoder = timm.create_model(model_name='mobilenetv3_large_100.ra_in1k',
                                          pretrained=True,
                                          features_only=True,
@@ -302,20 +305,9 @@ class Net(nn.Module):
         self.encoder.blocks[5]=nn.Identity()
         self.encoder.blocks[6]=nn.Identity()
 
-        # print(self.encoder)
 
-
-        # shuffle=shufflenet_v2_x1_0(weights=torchvision.models.ShuffleNet_V2_X1_0_Weights)
-        #
-        # nodes, _ = get_graph_node_names(shuffle)
-        #
-        # self.encoder = create_feature_extractor(
-        #     shuffle, return_nodes=['conv1', 'maxpool', 'stage2', 'stage3'])
-        #
-        # # self.encoder=MobileNetV2Backbone(in_channels=3)
-        # self.encoder_out_channels=[3, 24,24,116, 232 ]  ##shufflenet1.0
         self.encoder_out_channels = [3, 16, 24, 40, 112] #mobilenetv3
-        # self.encoder.out_channels=[3,16, 24, 32, 88, 720]
+
 
 
         self.matting=Matting(self.encoder_out_channels)
@@ -332,6 +324,7 @@ class Net(nn.Module):
     def forward(self, x):
         """Sequentially pass `x` trough model`s encoder, decoder and heads"""
         bs=x.size(0)
+
         features=self.encoder(x)
 
         features=[x]+features
@@ -350,7 +343,14 @@ class Net(nn.Module):
         fm = fm.view(bs, -1)
         x = self.fc(fm)
 
-        hm=self.hm(encx2)
+        ## hm size as 64x64
+        if self.input_size==(128,128):
+            hm = self.hm(encx2)
+        elif self.input_size == (256, 256):
+            hm=self.hm(encx4)
+        else:
+            print('please change the model ,by default ,we use 64x64 for hm')
+            raise NotImplementedError
 
 
         return x,hm,[encx2,encx4,encx8,encx16,x]
@@ -358,9 +358,9 @@ class Net(nn.Module):
 
 
 class TeacherNet(nn.Module):
-    def __init__(self,):
+    def __init__(self,inp_size=(128,128)):
         super(TeacherNet, self).__init__()
-
+        self.input_size = inp_size
         self.encoder = timm.create_model(model_name='efficientnet_b5.in12k_ft_in1k',
                                          pretrained=True,
                                          features_only=True,
@@ -368,13 +368,8 @@ class TeacherNet(nn.Module):
                                          bn_momentum=bn_momentum,
                                          in_chans=3,
                                          )
-        # print(self.encoder)
-        # print(self.encoder.blocks[6])
 
-        # self.encoder.blocks[6]=torch.nn.Identity()
-        # self.encoder=MobileNetV2Backbone(in_channels=3)
         self.encoder.out_channels=[3, 24 , 40, 64,176]
-        # self.encoder.out_channels=[3,16, 24, 32, 88, 720]
 
         self.matting = Matting(self.encoder.out_channels)
 
@@ -404,19 +399,25 @@ class TeacherNet(nn.Module):
         fm = fm.view(bs, -1)
         x = self.fc(fm)
 
-        hm = self.hm(encx2)
+        if self.input_size == (128, 128):
+            hm = self.hm(encx2)
+        elif self.input_size == (256, 256):
+            hm = self.hm(encx4)
+        else:
+            print('please change the model ,by default ,we use 64x64 for hm')
+            raise NotImplementedError
 
         return x,hm, [encx2, encx4, encx8, encx16, x]
 
 
 
 class COTRAIN(nn.Module):
-    def __init__(self,inference=False):
+    def __init__(self,inference=False,inp_size=(128,128)):
         super(COTRAIN, self).__init__()
 
         self.inference=inference
-        self.student=Net()
-        self.teacher=TeacherNet()
+        self.student=Net(inp_size)
+        self.teacher=TeacherNet(inp_size)
 
         self.MSELoss=nn.MSELoss()
 
@@ -500,9 +501,6 @@ class COTRAIN(nn.Module):
         cls_loss=self.BCELoss  ( cls_label_predict,cls_label)
         cls_loss=cls_loss*cls_weights
 
-
-
-
         cls_loss=torch.sum(cls_loss)/torch.sum(cls_weights)
 
         # leye_loss =  self.BCELoss  (leye_cls_predict, leye_cls_label)
@@ -557,7 +555,7 @@ class COTRAIN(nn.Module):
             #
             # loc=self.postp(teacher_hm)
 
-            return student_pre#,teacher_hm
+            return teacher_pre#,teacher_hm
 
         distill_loss=self.distill_loss(student_fms,teacher_fms)
 
