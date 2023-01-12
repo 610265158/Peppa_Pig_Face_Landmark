@@ -48,7 +48,7 @@ and with face mask:
 
   
 
-  I will release new model when there is better one. 7.5K trainning data is not enough for a commercial used model. Please label more data if needed.
+  I will release new model when there is better one. 7.5K trainning data is not enough for a very good model. Please label more data if needed.
 
 ## useage
 
