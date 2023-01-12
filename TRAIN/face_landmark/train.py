@@ -28,7 +28,7 @@ def main():
         train_df=f.readlines()
 
     if extra:
-        with open('extradate.txt', mode='r') as f:
+        with open('extradata.txt', mode='r') as f:
             extra_df = f.readlines()
             train_df+=extra_df
             # train_df=extra_df
