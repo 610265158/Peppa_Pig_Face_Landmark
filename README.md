@@ -29,7 +29,7 @@ and with face mask:
 
 + 1 face detector
 
-​		 [Ultra-Light-Fast-Generic-Face-Detector-1MB](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB)
+  [Ultra-Light-Fast-Generic-Face-Detector-1MB](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB)
 
 + 2 landmark detector
 
@@ -52,7 +52,7 @@ and with face mask:
 
 ## useage
 
-1. pretrained models are in ./pretrained, for easy to use ,we convert them to men
+1. pretrained models are in ./pretrained, for easy to use ,we convert them to mnn
 2. run `python demo.py --cam_id 0` use a camera    
    or  `python demo.py --video test.mp4`  detect for a video    
    or  `python demo.py --img_dir ./test`  detect for images dir no track   
