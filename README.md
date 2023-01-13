@@ -37,14 +37,14 @@ and with face mask:
 
   Refer to [TRAIN/face_landmark/README.md](https://github.com/610265158/Peppa_Pig_Face_Landmark/blob/master/TRAIN/face_landmark/README.md) to train the model.
 
-  the model is trained with WFLW data.
+  the model is trained with WFLW data. For student **mobilenetv3-large** was used  as backbone, for teacher is **efficientnetb5**.
 
   | model   | Resolution | NME(test set) | model size (int8 weights) | Pretrained                                                   |
   | ------- | ---------- | ------------- | ------------------------- | ------------------------------------------------------------ |
-  | Student | 128x128    | 5.03          | 2.0M                      |                                                              |
-  | Teacher | 128x128    | 4.65          | 7.5M                      |                                                              |
-  | Student | 256x256    | 4.65          | 2.0M                      | [model256](https://drive.google.com/drive/folders/1JFVrbMx07PwL47dFlUSZ1tAMcVxVmJXo?usp=share_link) |
-  | Teacher | 256x256    | 4.47          | 7.5M                      | [model256](https://drive.google.com/drive/folders/1JFVrbMx07PwL47dFlUSZ1tAMcVxVmJXo?usp=share_link) |
+  | Student | 128x128    | 4.95          | 1.9M                      | [model128](https://drive.google.com/drive/folders/1zivD151CkOSm8KYyeC7v4YPC0aYDomry?usp=share_link) |
+  | Teacher | 128x128    | 4.64          | 6.9M                      | [model128](https://drive.google.com/drive/folders/1zivD151CkOSm8KYyeC7v4YPC0aYDomry?usp=share_link) |
+  | Student | 256x256    | 4.65          | 1.9M                      | [model256](https://drive.google.com/drive/folders/1JFVrbMx07PwL47dFlUSZ1tAMcVxVmJXo?usp=share_link) |
+  | Teacher | 256x256    | 4.47          | 6.9M                      | [model256](https://drive.google.com/drive/folders/1JFVrbMx07PwL47dFlUSZ1tAMcVxVmJXo?usp=share_link) |
 
   
 

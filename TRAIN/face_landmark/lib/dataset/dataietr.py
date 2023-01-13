@@ -52,12 +52,19 @@ class AlaskaDataIter():
                                     A.RandomBrightnessContrast(p=0.3),
                                     A.HueSaturationValue(p=0.3),
                                     A.OneOf([A.GaussianBlur(),
-                                            A.MotionBlur()],
-                                           p=0.1),
+                                             A.MotionBlur(),
+                                             A.Sharpen()],
+                                           p=0.2),
                                     A.ToGray(p=0.1),
                                     A.OneOf([A.GaussNoise(),
                                              A.ISONoise()],
                                             p=0.1),
+                                    A.JpegCompression(quality_lower=60,
+                                                      quality_upper=100,
+                                                      p=0.2),
+                                    A.CLAHE(p=0.2),
+
+
 
         ])
 
@@ -193,11 +200,11 @@ class AlaskaDataIter():
         joints[:, 0] = joints[:, 0] / crop_image_width
         joints[:, 1] = joints[:, 1] / crop_image_height
 
-        interp_methods = [cv2.INTER_LINEAR, cv2.INTER_CUBIC, cv2.INTER_AREA, cv2.INTER_NEAREST,
-                          cv2.INTER_LANCZOS4]
-        interp_method = random.choice(interp_methods)
+        # interp_methods = [cv2.INTER_LINEAR, cv2.INTER_CUBIC, cv2.INTER_AREA, cv2.INTER_NEAREST,
+        #                   cv2.INTER_LANCZOS4]
+        # interp_method = random.choice(interp_methods)
 
-        img = cv2.resize(img, (cfg.MODEL.win, cfg.MODEL.hin), interpolation=interp_method)
+        img = cv2.resize(img, (cfg.MODEL.win, cfg.MODEL.hin))
 
         joints[:, 0] = joints[:, 0] * cfg.MODEL.win
         joints[:, 1] = joints[:, 1] * cfg.MODEL.hin
@@ -289,7 +296,7 @@ class AlaskaDataIter():
             if random.uniform(0, 1) > 0.5:
                 crop_image, label = Mirror(crop_image, label=label, symmetry=cfg.DATA.symmetry)
             if random.uniform(0, 1) > 0.5:
-                angle = random.uniform(-45, 45)
+                angle = random.uniform(-30, 30)
                 crop_image, label = Rotate_aug(crop_image, label=label, angle=angle)
 
             if random.uniform(0, 1) > 0.7:

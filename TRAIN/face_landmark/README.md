@@ -30,16 +30,16 @@ pretrained model is placed in pretrained, in Peppa_Pig_Face_Landmark folder.
 
 WLFW test set.
 
+the model is trained with WFLW data. For student **mobilenetv3-large** was used  as backbone, for teacher is **efficientnetb5**.
+
 | model   | Resolution | NME(test set) | model size (int8 weights) | Pretrained                                                   |
 | ------- | ---------- | ------------- | ------------------------- | ------------------------------------------------------------ |
-| Student | 128x128    | 5.03          | 2.0M                      |                                                              |
-| Teacher | 128x128    | 4.65          | 7.5M                      |                                                              |
-| Student | 256x256    | 4.65          | 2.0M                      | [model256](https://drive.google.com/drive/folders/1JFVrbMx07PwL47dFlUSZ1tAMcVxVmJXo?usp=share_link) |
-| Teacher | 256x256    | 4.47          | 7.5M                      | [model256](https://drive.google.com/drive/folders/1JFVrbMx07PwL47dFlUSZ1tAMcVxVmJXo?usp=share_link) |
+| Student | 128x128    | 4.95          | 1.9M                      | [model128](https://drive.google.com/drive/folders/1zivD151CkOSm8KYyeC7v4YPC0aYDomry?usp=share_link) |
+| Teacher | 128x128    | 4.64          | 6.9M                      | [model128](https://drive.google.com/drive/folders/1zivD151CkOSm8KYyeC7v4YPC0aYDomry?usp=share_link) |
+| Student | 256x256    | 4.65          | 1.9M                      | [model256](https://drive.google.com/drive/folders/1JFVrbMx07PwL47dFlUSZ1tAMcVxVmJXo?usp=share_link) |
+| Teacher | 256x256    | 4.47          | 6.9M                      | [model256](https://drive.google.com/drive/folders/1JFVrbMx07PwL47dFlUSZ1tAMcVxVmJXo?usp=share_link) |
 
 
-
-I will release new model when there is better one. 7.5K trainning data is not enough for a commercial used model. Please label more data if needed.
 
 ## requirment
 
