@@ -76,6 +76,13 @@ config.DATA.symmetry = [(0, 32), (1, 31), (2, 30), (3, 29), (4, 28), (5, 27), (6
 
 
 
+config.SEED=42
+
+
+from lib.utils.seed_util import seed_everything
+
+seed_everything(config.SEED)
+
 
 
 
