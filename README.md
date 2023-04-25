@@ -19,7 +19,7 @@ and with face mask:
 ## requirment
 
 + PyTorch
-+ MNN  
++ onnxruntime  
 + opencv
 + python 3.7
 + easydict
