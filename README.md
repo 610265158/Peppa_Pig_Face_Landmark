@@ -28,7 +28,7 @@ and with face mask:
 
 + 1 face detector
 
-  [Ultra-Light-Fast-Generic-Face-Detector-1MB](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB)
+  [yolov5-face](https://github.com/deepcam-cn/yolov5-face)
 
 + 2 landmark detector
 
