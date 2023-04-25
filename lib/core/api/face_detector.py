@@ -2,12 +2,10 @@ import sys
 sys.path.append('.')
 import numpy as np
 import cv2
-import os
-import math
+
 import time
 import  torch
-import  MNN
-import math
+
 from config import config as cfg
 
 from lib.core.api.onnx_model_base import ONNXEngine

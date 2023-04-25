@@ -2,11 +2,9 @@
 
 import cv2
 import numpy as np
-import torch
-import  MNN
 
 from config import config as cfg
-
+from lib.core.api.onnx_model_base import ONNXEngine
 
 
 
@@ -15,11 +13,8 @@ class FaceLandmark:
         the model was constructed by the params in config.py
     """
 
-    def __init__(self,mnn_model_path='pretrained/kps.MNN'):
-        self.interpreter = MNN.Interpreter(mnn_model_path)
-        self.session =  self.interpreter.createSession()
-        self.input_tensor =  self.interpreter.getSessionInput( self.session)
-
+    def __init__(self,model_path='pretrained/kps.MNN'):
+        self.model=ONNXEngine(model_path)
         self.min_face = 20
         self.keypoints_num = cfg.KEYPOINTS.p_num
 
@@ -39,18 +34,8 @@ class FaceLandmark:
             image_croped = image_croped.transpose((2, 0, 1)).astype(np.float32)
 
             image_croped=image_croped/255.
-
-            tmp_input = MNN.Tensor((1, 3, self.input_size[1], self.input_size[0]), MNN.Halide_Type_Float, \
-                                   image_croped, MNN.Tensor_DimensionType_Caffe)
-
-            self.interpreter.resizeTensor(self.input_tensor, (1, 3, self.input_size[1], self.input_size[0]))
-            self.interpreter.resizeSession(self.session)
-            self.input_tensor.copyFromHostTensor(tmp_input)
-            #
-
-            self.interpreter.runSession(self.session)
-
-            landmark = self.interpreter.getSessionOutput(self.session).getData()
+            image_croped=np.expand_dims(image_croped,axis=0)
+            landmark=self.model(image_croped)[0][0]
 
             state=landmark[-68:]
             landmark=np.array(landmark)[:98*2].reshape(-1,2)

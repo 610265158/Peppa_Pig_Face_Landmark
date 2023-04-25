@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import time
 
 from lib.core.api.face_landmark import FaceLandmark
 from lib.core.api.face_detector import FaceDetector
@@ -16,8 +15,8 @@ class FaceAna():
     def __init__(self):
 
         
-        self.face_detector = FaceDetector(mnn_model_path=cfg.DETECT.model_path)
-        self.face_landmark = FaceLandmark(mnn_model_path=cfg.KEYPOINTS.model_path)
+        self.face_detector = FaceDetector(model_path=cfg.DETECT.model_path)
+        self.face_landmark = FaceLandmark(model_path=cfg.KEYPOINTS.model_path)
         self.trace = GroupTrack()
 
         ###another thread should run detector in a slow way and update the track_box
