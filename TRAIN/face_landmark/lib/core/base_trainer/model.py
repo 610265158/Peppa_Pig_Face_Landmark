@@ -294,7 +294,7 @@ class Net(nn.Module):
 
         hm = self.hm(encx4)
 
-        return x, hm, [encx4, encx8, encx16, x]
+        return x, hm, [encx4, encx8, encx16, hm]
 
 
 class TeacherNet(nn.Module):
@@ -340,7 +340,7 @@ class TeacherNet(nn.Module):
 
         hm = self.hm(encx4)
 
-        return x, hm, [encx4, encx8, encx16, x]
+        return x, hm, [encx4, encx8, encx16, hm]
 
 
 class AWingLoss(nn.Module):
@@ -401,7 +401,7 @@ class COTRAIN(nn.Module):
         num_level = len(student_pres)
         loss = 0
         for i in range(num_level):
-            loss += self.MSELoss(student_pres[i], teacher_pres[i].detach())
+            loss += self.MSELoss(student_pres[i], teacher_pres[i])
 
         return loss / num_level
 
@@ -434,16 +434,13 @@ class COTRAIN(nn.Module):
 
     def loss(self, predict_keypoints, label_keypoints):
 
+        pose_label = label_keypoints[:, 98*2:98*2+3]
 
-        pose_label = label_keypoints[:, :3]
-
-        cls_label = label_keypoints[:, 3:3 + 4]
+        cls_label = label_keypoints[:, 98*2+3:98*2+3 + 4]
         # leye_cls_label = label_keypoints[:, 199]
         # reye_cls_label = label_keypoints[:, 200]
         # mouth_cls_label = label_keypoints[:, 201]
         # big_mouth_cls_label = label_keypoints[:, 202]
-
-
 
         cls_weights = label_keypoints[:, -4:]
 
@@ -462,6 +459,7 @@ class COTRAIN(nn.Module):
         cls_loss = cls_loss * cls_weights
 
         cls_loss = torch.sum(cls_loss) / torch.sum(cls_weights)
+        print(loss_pose,cls_loss)
 
         # leye_loss =  self.BCELoss  (leye_cls_predict, leye_cls_label)
         # reye_loss =  self.BCELoss  (reye_cls_predict, reye_cls_label)
@@ -562,8 +560,8 @@ class COTRAIN(nn.Module):
             # teacher_hm = torch.nn.Sigmoid()(teacher_hm)
             #
             # loc=self.postp(teacher_hm)
-
-            return teacher_pre  # ,teacher_hm
+            teacher_pre, teacher_pre_full = self.postp(teacher_hm)
+            return teacher_pre_full  # ,teacher_hm
 
         distill_loss = self.distill_loss(student_fms, teacher_fms)
 
@@ -575,6 +573,7 @@ class COTRAIN(nn.Module):
         teacher_loss = self.loss(teacher_pre, gt)
 
         teacher_hm_loss = self.hm_loss(teacher_hm, gt_hm)
+
         teacher_loss = teacher_loss + teacher_hm_loss
 
         ### decode hm
