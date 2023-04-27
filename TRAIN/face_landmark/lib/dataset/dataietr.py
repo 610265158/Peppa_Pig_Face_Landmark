@@ -49,20 +49,12 @@ class AlaskaDataIter():
 
         self.train_trans = A.Compose([
 
-                                    A.RandomBrightnessContrast(p=0.3),
-                                    A.HueSaturationValue(p=0.3),
-                                    A.OneOf([A.GaussianBlur(),
-                                             A.MotionBlur(),
-                                             A.Sharpen()],
-                                           p=0.2),
+                                    A.RandomBrightnessContrast(p=0.5),
+                                    A.HueSaturationValue(p=0.5),
+                                    A.GaussianBlur(p=0.3),
                                     A.ToGray(p=0.1),
-                                    A.OneOf([A.GaussNoise(),
-                                             A.ISONoise()],
-                                            p=0.1),
-                                    A.JpegCompression(quality_lower=60,
-                                                      quality_upper=100,
-                                                      p=0.2),
-                                    A.CLAHE(p=0.2),
+                                    A.GaussNoise(p=0.2),
+                                    
 
 
 
@@ -160,7 +152,11 @@ class AlaskaDataIter():
     def augmentationCropImage(self, img, bbox, joints=None, is_training=True):
 
         bbox = np.array(bbox).reshape(4, ).astype(np.float32)
-        add = max(img.shape[0], img.shape[1])
+
+        bbox_width=bbox[2]-bbox[0]
+        bbox_height=bbox[3]-bbox[1]
+
+        add = int(max(bbox_width,bbox_height))
 
         bimg = cv2.copyMakeBorder(img, add, add, add, add, borderType=cv2.BORDER_CONSTANT)
 
