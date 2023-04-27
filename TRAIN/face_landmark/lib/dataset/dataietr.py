@@ -243,10 +243,10 @@ class AlaskaDataIter():
             eye_region = kps[68:75, :]
             weights_labelel = [1, 0]
 
-        xmin = int(np.clip(np.min(eye_region[:, 0]) - 10, 0, 128))
-        ymin = int(np.clip(np.min(eye_region[:, 1]) - 10, 0, 128))
-        xmax = int(np.clip(np.max(eye_region[:, 0]) + 10, 0, 128))
-        ymax = int(np.clip(np.max(eye_region[:, 1]) + 10, 0, 128))
+        xmin = int(np.clip(np.min(eye_region[:, 0]) - 10, 0, cfg.MODEL.win))
+        ymin = int(np.clip(np.min(eye_region[:, 1]) - 10, 0, cfg.MODEL.hin))
+        xmax = int(np.clip(np.max(eye_region[:, 0]) + 10, 0, cfg.MODEL.win))
+        ymax = int(np.clip(np.max(eye_region[:, 1]) + 10, 0, cfg.MODEL.hin))
 
         img[ymin:ymax, xmin:xmax, :] = 0
 
