@@ -48,7 +48,8 @@ class AlaskaDataIter():
             A.ToGray(p=0.1),
             A.GaussNoise(p=0.2),
             A.CoarseDropout(max_holes=8, max_width=16,
-                            max_height=16)
+                            max_height=16,
+                            p=0.2)
 
         ])
 

@@ -459,7 +459,6 @@ class COTRAIN(nn.Module):
         cls_loss = cls_loss * cls_weights
 
         cls_loss = torch.sum(cls_loss) / torch.sum(cls_weights)
-        print(loss_pose,cls_loss)
 
         # leye_loss =  self.BCELoss  (leye_cls_predict, leye_cls_label)
         # reye_loss =  self.BCELoss  (reye_cls_predict, reye_cls_label)
