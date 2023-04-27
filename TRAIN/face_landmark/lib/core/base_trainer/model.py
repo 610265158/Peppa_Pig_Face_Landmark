@@ -294,7 +294,7 @@ class Net(nn.Module):
 
         hm = self.hm(encx4)
 
-        return x, hm, [encx4, encx8, encx16, hm]
+        return x, hm, [encx4, encx8, encx16]
 
 
 class TeacherNet(nn.Module):
@@ -340,7 +340,7 @@ class TeacherNet(nn.Module):
 
         hm = self.hm(encx4)
 
-        return x, hm, [encx4, encx8, encx16, hm]
+        return x, hm, [encx4, encx8, encx16]
 
 
 class AWingLoss(nn.Module):
@@ -401,7 +401,7 @@ class COTRAIN(nn.Module):
         num_level = len(student_pres)
         loss = 0
         for i in range(num_level):
-            loss += self.MSELoss(student_pres[i], teacher_pres[i])
+            loss += self.MSELoss(student_pres[i], teacher_pres[i].detach())
 
         return loss / num_level
 
