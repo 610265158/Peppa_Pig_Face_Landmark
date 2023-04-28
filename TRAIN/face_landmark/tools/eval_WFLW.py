@@ -1,5 +1,6 @@
 ##import pandas as pd
-
+import sys
+sys.path.append('.')
 
 from lib.core.base_trainer.model import COTRAIN
 

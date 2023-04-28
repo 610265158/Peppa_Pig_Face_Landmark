@@ -40,14 +40,25 @@ the model is trained with WFLW data. For student **mobilenetv3-large** was used 
 | Teacher | 256x256    | 4.47          | 6.9M                      | [model256](https://drive.google.com/drive/folders/1JFVrbMx07PwL47dFlUSZ1tAMcVxVmJXo?usp=share_link) |
 
 
++2 Update, new model!!
+
+| model   | Resolution | NME(test set) | Params | Floaps | Pretrained                                                   |
+| ------- | ---------- |---------------|--------|--------| ------------------------------------------------------------ |
+| Student | 256x256    | 4.60          | 2.07M  | 2.49G  | [model256](https://drive.google.com/file/d/1bLE6RhQu-SVmQR2MWIt6s2vyUbnTjA83/view?usp=sharing) |
+| Teacher | 256x256    | 4.24          | 27.42M | 5.18G  | [model256](https://drive.google.com/file/d/1bLE6RhQu-SVmQR2MWIt6s2vyUbnTjA83/view?usp=sharing) |
+
+
+| WLFW    | inputsize | Fullset | Pose | Exp. | Ill. | Mu.  | Occ. | Blur |
+|---------|-----------|---------|------|------|------|------|------|------|
+| Student | 256x256   | 4.60    | 7.84 | 4.71 | 4.40 | 4.49 | 5.90 | 5.31 |
+| Teacher | 256x256   | 4.24    | 7.06 | 4.27 | 4.10 | 4.03 | 5.28 | 4.90 |
+
 
 ## requirment
 
 + pytorch
 
 + opencv
-
-+ python 3.7
 
 + timm
 
@@ -62,7 +73,7 @@ the model is trained with WFLW data. For student **mobilenetv3-large** was used 
 1. Download [WFLW](https://wywu.github.io/projects/LAB/WFLW.html) data. Set them in train_config.py.
 3. then  `run.sh`
 
-4. by default it is trained with mobilenetv3-large as backbone.
+4. by default it is trained with mobilenetv3-large as student, efficientnetb5 as teacher.
 
 ### visualization
 
