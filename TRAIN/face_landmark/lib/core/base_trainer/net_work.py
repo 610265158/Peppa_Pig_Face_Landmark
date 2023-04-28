@@ -441,7 +441,7 @@ class Train(object):
 
                 #### save the model every end of epoch
                 #### save the model every end of epoch
-                current_model_saved_name='./models/fold%d_epoch_%d_val_loss_%.6f_student_nme_%.2f_teacher_nme_%.2f.pth'%(self.fold,
+                current_model_saved_name='./models/fold%d_epoch_%d_val_loss_%.6f_student_nme_%.5f_teacher_nme_%.5f.pth'%(self.fold,
                                                                                                      epoch,
                                                                                                      summary_loss.avg,
                                                                                                      summary_student_nme_fix.avg,
