@@ -45,7 +45,25 @@ and with face mask:
   | Student | 256x256    | 4.65          | 1.9M                      | [model256](https://drive.google.com/drive/folders/1JFVrbMx07PwL47dFlUSZ1tAMcVxVmJXo?usp=share_link) |
   | Teacher | 256x256    | 4.47          | 6.9M                      | [model256](https://drive.google.com/drive/folders/1JFVrbMx07PwL47dFlUSZ1tAMcVxVmJXo?usp=share_link) |
 
+
+**UPDATE Better model**
   
+| model   | Resolution | NME(test set) | Params | Flops | Pretrained                                                                                            |
+| ------- |------------|---------------|--------|-------|-------------------------------------------------------------------------------------------------------|
+| Student | 128x128    |           | 2.07M  | 0.63G |    |
+| Teacher | 128x128    |           | 27.42M | 1.30G |        |
+| Student | 256x256    | 4.60          | 2.07M  | 2.49G | [model256_update](https://drive.google.com/file/d/1bLE6RhQu-SVmQR2MWIt6s2vyUbnTjA83/view?usp=sharing)        |
+| Teacher | 256x256    | 4.24          | 27.42M | 5.18G | [model256_update](https://drive.google.com/file/d/1bLE6RhQu-SVmQR2MWIt6s2vyUbnTjA83/view?usp=sharing) |
+
+
+| WLFW    | inputsize | Fullset | Pose | Exp. | Ill. | Mu.  | Occ. | Blur |
+|---------|-----------|--------|------|------|------|------|------|------|
+| Student | 128x128   |     |  |  |  |  |  |  |
+| Teacher | 128x128    |     | |  |  |  |  |  |
+| Student | 256x256   | 4.60   | 7.84 | 4.71 | 4.40 | 4.49 | 5.90 | 5.31 |
+| Teacher | 256x256   | 4.24   | 7.06 | 4.27 | 4.10 | 4.03 | 5.28 | 4.90 |
+
+
 
   I will release new model when there is better one. 7.5K trainning data is not enough for a very good model. Please label more data if needed.
 
