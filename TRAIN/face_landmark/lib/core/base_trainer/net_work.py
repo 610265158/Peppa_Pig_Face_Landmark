@@ -404,7 +404,7 @@ class Train(object):
 
             if epoch%cfg.TRAIN.test_interval==0 and epoch>0 or epoch%10==0:
 
-                summary_loss ,summary_student_mad,summary_student_mse,summary_student_nme,summary_student_nme_fix,\
+                summary_loss ,summary_student_mad,summary_student_mse,summary_student_nme,summary_student_fix_nme,\
                     summary_teacher_nme,summary_teacher_fix_nme\
                     = distributed_test_epoch(epoch)
 
@@ -424,7 +424,7 @@ class Train(object):
                                             summary_student_mad.avg,
                                             summary_student_mse.avg,
                                             summary_student_nme.avg,
-                                            summary_student_nme_fix.avg,
+                                            summary_student_fix_nme.avg,
                                             summary_teacher_nme.avg,
                                             summary_teacher_fix_nme.avg,
                                             (time.time() - t))
@@ -444,7 +444,7 @@ class Train(object):
                 current_model_saved_name='./models/fold%d_epoch_%d_val_loss_%.6f_student_nme_%.5f_teacher_nme_%.5f.pth'%(self.fold,
                                                                                                      epoch,
                                                                                                      summary_loss.avg,
-                                                                                                     summary_student_nme_fix.avg,
+                                                                                                     summary_student_fix_nme.avg,
                                                                                                      summary_teacher_fix_nme.avg)
                 logger.info('A model saved to %s' % current_model_saved_name)
                 #### save the model every end of epoch
