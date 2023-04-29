@@ -268,7 +268,7 @@ class Net(nn.Module):
 
         self.fc = nn.Linear(896,  3 + 4, bias=True)
 
-        self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=3, stride=1, padding=1, bias=True)
+        self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=1, stride=1, padding=0, bias=True)
 
         weight_init(self.fc)
         weight_init(self.hm)
@@ -294,21 +294,21 @@ class Net(nn.Module):
 
         hm = self.hm(encx4)
 
-        return x, hm, [encx4, encx8, encx16]
+        return x, hm, [encx4, encx8, encx16,hm]
 
 
 class TeacherNet(nn.Module):
     def __init__(self, inp_size=(128, 128)):
         super(TeacherNet, self).__init__()
         self.input_size = inp_size
-        self.encoder = timm.create_model(model_name='efficientnet_b5.in12k_ft_in1k',
+        self.encoder = timm.create_model(model_name='hrnet_w18',
                                          pretrained=True,
                                          features_only=True,
                                          out_indices=[0, 1, 2, 3],
                                          in_chans=3,
                                          )
 
-        self.encoder.out_channels = [3, 24, 40, 64, 176]
+        self.encoder.out_channels = [3, 64, 128, 256, 512]
 
         self.decoder = Decoder(self.encoder.out_channels)
 
@@ -316,7 +316,7 @@ class TeacherNet(nn.Module):
 
         self.fc = nn.Linear(896,  3 + 4, bias=True)
 
-        self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=3, stride=1, padding=1, bias=True)
+        self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=1, stride=1, padding=0, bias=True)
 
         weight_init(self.fc)
         weight_init(self.hm)
@@ -340,7 +340,7 @@ class TeacherNet(nn.Module):
 
         hm = self.hm(encx4)
 
-        return x, hm, [encx4, encx8, encx16]
+        return x, hm, [encx4, encx8, encx16,hm]
 
 
 class AWingLoss(nn.Module):
@@ -389,10 +389,10 @@ class COTRAIN(nn.Module):
         self.teacher = TeacherNet(inp_size)
 
         self.MSELoss = nn.MSELoss()
-
+        self.MSELoss_no_reduction = nn.MSELoss(reduction='none')
         self.BCELoss = nn.BCEWithLogitsLoss(reduction='none')
 
-        self.act = nn.Sigmoid()
+
 
         self.Awing = AWingLoss()
 
@@ -472,7 +472,7 @@ class COTRAIN(nn.Module):
 
     def offside_loss(self,pre,gt,weight):
 
-        loss=nn.MSELoss(reduction='none')(pre,gt)
+        loss=self.MSELoss_no_reduction(pre,gt)
 
         loss=loss*weight
 
@@ -552,14 +552,14 @@ class COTRAIN(nn.Module):
 
         student_pre, student_hm, student_fms = self.student(x)
 
-        teacher_pre, teacher_hm, teacher_fms = self.teacher(x)
+        # teacher_pre, teacher_hm, teacher_fms = self.teacher(x)
 
         if self.inference:
             # teacher_pre[:,-4:]=torch.nn.Sigmoid()(teacher_pre[:,-4:])
             # teacher_hm = torch.nn.Sigmoid()(teacher_hm)
             #
             # loc=self.postp(teacher_hm)
-            teacher_pre, teacher_pre_full = self.postp(teacher_hm)
+            teacher_pre, teacher_pre_full = self.postp(student_hm)
             return teacher_pre_full  # ,teacher_hm
 
         distill_loss = self.distill_loss(student_fms, teacher_fms)
