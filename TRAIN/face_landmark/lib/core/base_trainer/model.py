@@ -294,11 +294,9 @@ class Net(nn.Module):
 
         hm = self.hm(encx4)
 
-<<<<<<< HEAD
+
         return x, hm, [hm]
-=======
-        return x, hm, [encx4, encx8, encx16,hm]
->>>>>>> e8792b8625941be09c6f4a255f828f7a59ab0220
+
 
 
 class TeacherNet(nn.Module):
@@ -344,11 +342,8 @@ class TeacherNet(nn.Module):
 
         hm = self.hm(encx4)
 
-<<<<<<< HEAD
         return x, hm, [hm]
-=======
-        return x, hm, [encx4, encx8, encx16,hm]
->>>>>>> e8792b8625941be09c6f4a255f828f7a59ab0220
+
 
 
 class AWingLoss(nn.Module):
@@ -479,11 +474,8 @@ class COTRAIN(nn.Module):
 
     def offside_loss(self,pre,gt,weight):
 
-<<<<<<< HEAD
         loss=self._wing_loss(pre,gt)
-=======
-        loss=self.MSELoss_no_reduction(pre,gt)
->>>>>>> e8792b8625941be09c6f4a255f828f7a59ab0220
+
 
         loss=loss*weight
 
@@ -563,7 +555,7 @@ class COTRAIN(nn.Module):
 
         student_pre, student_hm, student_fms = self.student(x)
 
-        # teacher_pre, teacher_hm, teacher_fms = self.teacher(x)
+        teacher_pre, teacher_hm, teacher_fms = self.teacher(x)
 
         if self.inference:
             # teacher_pre[:,-4:]=torch.nn.Sigmoid()(teacher_pre[:,-4:])
