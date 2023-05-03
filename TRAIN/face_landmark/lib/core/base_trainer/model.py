@@ -181,7 +181,7 @@ class DecoderBlock(nn.Module):
     def forward(self, x, skip=None):
 
         # x= upsample_x_like_y(x,skip)
-        x = F.interpolate(x, scale_factor=2)
+        x = F.interpolate(x, scale_factor=2,mode='bilinear')
         if skip is None:
             return x
 
@@ -213,10 +213,10 @@ class Decoder(nn.Module):
 
     def __init__(self, encoder_channels):
         super(Decoder, self).__init__()
-        self.extra_feature = FeatureFuc(encoder_channels[-1])
-        self.aspp = ASPP(encoder_channels[-1], [2, 4, 8])
 
-        self.upsampler1 = DecoderBlock(512, encoder_channels[-2], 256, \
+        self.aspp = ASPP(encoder_channels[-1], [2, 4, 8],out_channels=256)
+
+        self.upsampler1 = DecoderBlock(256, encoder_channels[-2], 256, \
                                        use_separable_conv=True, \
                                        use_attention=True,
                                        kernel_size=3)
@@ -233,7 +233,7 @@ class Decoder(nn.Module):
         img, encx2, encx4, encx8, encx16 = features
 
         ## add extra feature
-        encx16 = self.extra_feature(encx16)
+
         encx16 = self.aspp(encx16)
 
         decx8 = self.upsampler1(encx16, encx8)
@@ -258,17 +258,17 @@ class Net(nn.Module):
                                          )
 
         # self.encoder.blocks[4][1]=nn.Identity()
-        self.encoder.blocks[5] = nn.Identity()
+
         self.encoder.blocks[6] = nn.Identity()
 
-        self.encoder_out_channels = [3, 16, 24, 40, 112]  # mobilenetv3
+        self.encoder_out_channels = [3, 16, 24, 40, 160]  # mobilenetv3
 
         self.decoder = Decoder(self.encoder_out_channels)
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self.fc = nn.Linear(896,  3 + 4, bias=True)
+        self.fc = nn.Linear(640,  3 + 4, bias=True)
 
-        self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=3, stride=1, padding=1, bias=True)
+        self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=1, stride=1, padding=0, bias=True)
 
         weight_init(self.fc)
         weight_init(self.hm)
@@ -294,29 +294,29 @@ class Net(nn.Module):
 
         hm = self.hm(encx4)
 
-        return x, hm, [encx4, encx8, encx16]
+        return x, hm, [hm]
 
 
 class TeacherNet(nn.Module):
     def __init__(self, inp_size=(128, 128)):
         super(TeacherNet, self).__init__()
         self.input_size = inp_size
-        self.encoder = timm.create_model(model_name='efficientnet_b5.in12k_ft_in1k',
+        self.encoder = timm.create_model(model_name='hrnet_w18',
                                          pretrained=True,
                                          features_only=True,
                                          out_indices=[0, 1, 2, 3],
                                          in_chans=3,
                                          )
 
-        self.encoder.out_channels = [3, 24, 40, 64, 176]
+        self.encoder.out_channels = [3, 64, 128, 256, 512]
 
         self.decoder = Decoder(self.encoder.out_channels)
 
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self.fc = nn.Linear(896,  3 + 4, bias=True)
+        self.fc = nn.Linear(640,  3 + 4, bias=True)
 
-        self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=3, stride=1, padding=1, bias=True)
+        self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=1, stride=1, padding=0, bias=True)
 
         weight_init(self.fc)
         weight_init(self.hm)
@@ -340,7 +340,7 @@ class TeacherNet(nn.Module):
 
         hm = self.hm(encx4)
 
-        return x, hm, [encx4, encx8, encx16]
+        return x, hm, [hm]
 
 
 class AWingLoss(nn.Module):
@@ -389,10 +389,10 @@ class COTRAIN(nn.Module):
         self.teacher = TeacherNet(inp_size)
 
         self.MSELoss = nn.MSELoss()
-
+        self.MSELoss_no_reduction = nn.MSELoss(reduction='none')
         self.BCELoss = nn.BCEWithLogitsLoss(reduction='none')
 
-        self.act = nn.Sigmoid()
+
 
         self.Awing = AWingLoss()
 
@@ -427,10 +427,9 @@ class COTRAIN(nn.Module):
 
         )
 
-        losses = losses * weights
-        loss = torch.sum(torch.mean(losses, dim=[0]))
+        
 
-        return loss
+        return losses
 
     def loss(self, predict_keypoints, label_keypoints):
 
@@ -472,7 +471,7 @@ class COTRAIN(nn.Module):
 
     def offside_loss(self,pre,gt,weight):
 
-        loss=nn.MSELoss(reduction='none')(pre,gt)
+        loss=self._wing_loss(pre,gt)
 
         loss=loss*weight
 
@@ -559,7 +558,7 @@ class COTRAIN(nn.Module):
             # teacher_hm = torch.nn.Sigmoid()(teacher_hm)
             #
             # loc=self.postp(teacher_hm)
-            teacher_pre, teacher_pre_full = self.postp(teacher_hm)
+            teacher_pre, teacher_pre_full = self.postp(student_hm)
             return teacher_pre_full  # ,teacher_hm
 
         distill_loss = self.distill_loss(student_fms, teacher_fms)
@@ -596,3 +595,4 @@ if __name__ == '__main__':
     flops, params = profile(model, inputs=(input,))
     print(flops / 1024 / 1024 / 1024)
     print(params / 1024 / 1024)
+

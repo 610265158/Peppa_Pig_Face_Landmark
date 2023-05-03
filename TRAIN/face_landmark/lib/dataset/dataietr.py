@@ -122,11 +122,11 @@ class AlaskaDataIter():
 
             ##########eyes diff aug
             if left_eye_close and not right_eye_close:
-                for i in range(20):
+                for i in range(15):
                     expanded.append(cur_df)
                 lar_count += 1
             if not left_eye_close and right_eye_close:
-                for i in range(20):
+                for i in range(15):
                     expanded.append(cur_df)
                 lar_count += 1
 
