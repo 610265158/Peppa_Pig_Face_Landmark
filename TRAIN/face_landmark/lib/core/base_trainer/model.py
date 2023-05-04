@@ -281,18 +281,18 @@ class Net(nn.Module):
 
         features = [x] + features
 
-        [encx4, encx8, encx16] = self.decoder(features)
+        [decx4, decx8, decx16] = self.decoder(features)
 
-        fmx16 = self._avg_pooling(encx16)
-        fmx8 = self._avg_pooling(encx8)
-        fmx4 = self._avg_pooling(encx4)
+        fmx16 = self._avg_pooling(decx16)
+        fmx8 = self._avg_pooling(decx8)
+        fmx4 = self._avg_pooling(decx4)
 
         fm = torch.cat([fmx4, fmx8, fmx16], dim=1)
 
         fm = fm.view(bs, -1)
         x = self.fc(fm)
 
-        hm = self.hm(encx4)
+        hm = self.hm(decx4)
 
 
         return x, hm, [hm]
@@ -329,18 +329,18 @@ class TeacherNet(nn.Module):
         features = self.encoder(x)
 
         features = [x] + features
-        [encx4, encx8, encx16] = self.decoder(features)
+        [decx4, decx8, decx16] = self.decoder(features)
 
-        fmx16 = self._avg_pooling(encx16)
-        fmx8 = self._avg_pooling(encx8)
-        fmx4 = self._avg_pooling(encx4)
+        fmx16 = self._avg_pooling(decx16)
+        fmx8 = self._avg_pooling(decx8)
+        fmx4 = self._avg_pooling(decx4)
 
         fm = torch.cat([fmx4, fmx8, fmx16], dim=1)
 
         fm = fm.view(bs, -1)
         x = self.fc(fm)
 
-        hm = self.hm(encx4)
+        hm = self.hm(decx4)
 
         return x, hm, [hm]
 
