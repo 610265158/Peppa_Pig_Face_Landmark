@@ -142,9 +142,9 @@ def do_eval(data_dir,model,input_size):
         print('for cls:',k, ' nme:',np.mean(nme_list))
 
 
-def get_model(weight):
+def get_model(weight,model='teacher'):
 
-    model=COTRAIN(inference=True)
+    model=COTRAIN(inference=model)
     model.eval()
     state_dict = torch.load(weight, map_location=device)
     model.load_state_dict(state_dict, strict=False)
@@ -162,19 +162,21 @@ def main(data_dir,weight,input_size):
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Start train.')
 
-    parser.add_argument('--model', dest='model', type=str, default=None, \
-                        help='the model to use')
+    parser.add_argument('--weight', dest='weight', type=str, default=None, \
+                        help='the weight to use')
     parser.add_argument('--data_dir', dest='data_dir', type=str, default=None, \
                         help='the data_dir to use')
     parser.add_argument('--img_size', dest='img_size', type=int, default=256, \
                         help='the inputsize to use')
+    parser.add_argument('--model', dest='model', type=str, default='teacher', \
+                        help='teache or student')
     args = parser.parse_args()
 
     data_dir=args.data_dir
-    model=args.model
+    weight=args.weight
     img_size=args.img_size
-
-    main(data_dir,model,img_size)
+    model=args.model
+    main(data_dir,weight,img_size,model)
 
 
 

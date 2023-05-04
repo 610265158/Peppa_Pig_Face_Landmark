@@ -384,7 +384,7 @@ class AWingLoss(nn.Module):
 
 
 class COTRAIN(nn.Module):
-    def __init__(self, inference=False, inp_size=(128, 128)):
+    def __init__(self, inference=None, inp_size=(128, 128)):
         super(COTRAIN, self).__init__()
 
         self.inference = inference
@@ -398,6 +398,8 @@ class COTRAIN(nn.Module):
 
 
         self.Awing = AWingLoss()
+        if inference=='teacher':
+            self.run_with_teacher=True
 
     def distill_loss(self, student_pres, teacher_pres):
 
@@ -557,12 +559,12 @@ class COTRAIN(nn.Module):
 
         teacher_pre, teacher_hm, teacher_fms = self.teacher(x)
 
-        if self.inference:
-            # teacher_pre[:,-4:]=torch.nn.Sigmoid()(teacher_pre[:,-4:])
-            # teacher_hm = torch.nn.Sigmoid()(teacher_hm)
-            #
-            # loc=self.postp(teacher_hm)
-            teacher_pre, teacher_pre_full = self.postp(student_hm)
+        if self.inference :
+            if self.inference=='teacher':
+                hm_used=teacher_hm
+            else:
+                hm_used=student_hm
+            teacher_pre, teacher_pre_full = self.postp(hm_used)
             return teacher_pre_full  # ,teacher_hm
 
         distill_loss = self.distill_loss(student_fms, teacher_fms)
@@ -591,9 +593,7 @@ if __name__ == '__main__':
 
     from thop import profile
 
-    # dummy_x = torch.randn(1, 3, 288, 160, device='cpu')
-
-    model = COTRAIN(inference=True)
+    model = COTRAIN(inference='teacher')
 
     input = torch.randn(1, 3, 128, 128)
     flops, params = profile(model, inputs=(input,))
