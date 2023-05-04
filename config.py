@@ -17,11 +17,11 @@ config.DETECT.iou_thres=0.3                         ### iou thres for nms
 
 
 config.KEYPOINTS = edict()
-config.KEYPOINTS.model_path='./pretrained/kps_teacher.onnx'     ### saved_model or tflite
+config.KEYPOINTS.model_path='./pretrained/kps_student.onnx'     ### saved_model or tflite
 config.KEYPOINTS.dense_dim=136+3+4                  #### output dimension
 config.KEYPOINTS.p_num=68                           #### 68 points
 config.KEYPOINTS.base_extend_range=[0.2,0.3]        ####
-config.KEYPOINTS.input_shape = (128,128,3)          # input size during training , 160
+config.KEYPOINTS.input_shape = (256,256,3)          # input size during training , 160
 
 config.TRACE= edict()
 
