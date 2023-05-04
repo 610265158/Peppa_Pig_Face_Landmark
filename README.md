@@ -62,7 +62,7 @@ and with face mask:
 
 ```python
 # by code:
-from lib.core.api.facer import FaceAna
+from lib import FaceAna
 facer = FaceAna()
 boxes, landmarks, _ = facer.run(image)
   
