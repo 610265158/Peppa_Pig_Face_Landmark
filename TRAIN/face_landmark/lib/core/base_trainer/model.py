@@ -519,7 +519,7 @@ class COTRAIN(nn.Module):
 
         hm_score = hm_score.reshape([bs, 98, -1])
 
-        hm_indx = torch.argmax(hm_score, dim=2)
+        score,hm_indx = torch.max(hm_score, dim=2)
 
         #### add offside
 
@@ -551,7 +551,7 @@ class COTRAIN(nn.Module):
         loc_fix[..., 1] /= hm_H
         loc_fix = loc_fix.view(bs, -1)
 
-        return loc,loc_fix
+        return loc,loc_fix,score
 
     def forward(self, x, gt=None, gt_hm=None):
 
@@ -564,8 +564,8 @@ class COTRAIN(nn.Module):
                 hm_used=teacher_hm
             else:
                 hm_used=student_hm
-            teacher_pre, teacher_pre_full = self.postp(hm_used)
-            return teacher_pre_full  # ,teacher_hm
+            teacher_pre, teacher_pre_full,score = self.postp(hm_used)
+            return teacher_pre_full  ,score
 
         distill_loss = self.distill_loss(student_fms, teacher_fms)
 
@@ -581,8 +581,8 @@ class COTRAIN(nn.Module):
         teacher_loss = teacher_loss + teacher_hm_loss
 
         ### decode hm
-        student_pre,student_pre_full = self.postp(student_hm)
-        teacher_pre,teacher_pre_full = self.postp(teacher_hm)
+        student_pre,student_pre_full,_ = self.postp(student_hm)
+        teacher_pre,teacher_pre_full,_ = self.postp(teacher_hm)
 
         return student_loss, teacher_loss, distill_loss, student_pre, student_pre_full, teacher_pre, teacher_pre_full
 

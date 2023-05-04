@@ -39,7 +39,7 @@ class FaceAna():
             boxes = self.face_detector(image)
             self.previous_image=image
             boxes = self.judge_boxs(self.track_box, boxes)
-
+            self.trace.previous_landmarks_set=None
         else:
             boxes=self.track_box
             self.previous_image = image

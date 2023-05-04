@@ -14,12 +14,12 @@ import re
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weight', type=str,default=None, help='the thres for detect')
-parser.add_argument('--input_size', type=int,default=256, help='the thres for detect')
+parser.add_argument('--img_size', type=int,default=256, help='the thres for detect')
 parser.add_argument('--model', type=str,default='teacher', help='teacher or student to inference')
 args = parser.parse_args()
 
 weight=args.weight
-input_size=args.input_size
+input_size=args.img_size
 model=args.model
 
 device=torch.device('cpu')
