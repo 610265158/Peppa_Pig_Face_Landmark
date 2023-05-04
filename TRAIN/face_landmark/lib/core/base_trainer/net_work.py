@@ -234,7 +234,7 @@ class Train(object):
 
                 with torch.cuda.amp.autocast(enabled=self.fp16):
 
-                    student_loss, teacher_loss, distill_loss,mate,_ = self.model(data,kps,hms)
+                    student_loss, teacher_loss, distill_loss,_,_,_,_ = self.model(data,kps,hms)
 
                     # calculate the final loss, backward the loss, and update the model
                     current_loss =  student_loss+ teacher_loss+ distill_loss
@@ -265,7 +265,6 @@ class Train(object):
 
 
                 if self.iter_num%cfg.TRAIN.log_interval==0:
-
 
                     log_message = '[fold %d], ' \
                                   'Train Step %d, ' \
@@ -299,7 +298,9 @@ class Train(object):
             summary_student_mad= AverageMeter()
             summary_student_mse= AverageMeter()
             summary_student_nme = AverageMeter()
+            summary_student_fix_nme = AverageMeter()
             summary_teacher_nme = AverageMeter()
+            summary_teacher_fix_nme = AverageMeter()
 
 
             self.model.eval()
@@ -313,7 +314,7 @@ class Train(object):
                     hms= hms.to(self.device).float()
                     batch_size = data.shape[0]
 
-                    loss,_,_,student_output,teacher_output = self.model(data,kps,hms)
+                    loss,_,_,student_pre,student_pre_fix,teacher_pre,teacher_pre_fix = self.model(data,kps,hms)
 
 
                     if self.ddp:
@@ -323,20 +324,32 @@ class Train(object):
 
 
 
-                    student_val_mad,student_val_mse,student_val_nme =self.metric(kps[:,:98*2],student_output[:,:98*2])
-                    teacher_val_mad, teacher_val_mse, teacher_val_nme = self.metric(kps[:, :98 * 2], teacher_output[:, :98 * 2])
+                    student_val_mad,student_val_mse,student_val_nme =self.metric(kps[:,:98*2],
+                                                                                 student_pre[:,:98*2])
+                    student_fix_val_mad, student_fix_val_mse, student_fix_val_nme = self.metric(kps[:, :98 * 2],
+                                                                                                student_pre_fix[:, :98 * 2])
+
+                    techer_val_mad, techer_val_mse, techer_val_nme = self.metric(kps[:, :98 * 2],
+                                                                                    teacher_pre[:, :98 * 2])
+                    techer_fix_val_mad, techer_fix_val_mse, techer_fix_val_nme = self.metric(kps[:, :98 * 2],
+                                                                                    teacher_pre_fix[:, :98 * 2])
 
                     if self.ddp:
 
                         torch.distributed.all_reduce(student_val_mad.div_(torch.distributed.get_world_size()))
                         torch.distributed.all_reduce(student_val_mse.div_(torch.distributed.get_world_size()))
                         torch.distributed.all_reduce(student_val_nme.div_(torch.distributed.get_world_size()))
-                        torch.distributed.all_reduce(teacher_val_nme.div_(torch.distributed.get_world_size()))
+                        torch.distributed.all_reduce(student_fix_val_nme.div_(torch.distributed.get_world_size()))
+
+                        torch.distributed.all_reduce(techer_val_nme.div_(torch.distributed.get_world_size()))
+                        torch.distributed.all_reduce(techer_fix_val_nme.div_(torch.distributed.get_world_size()))
 
                     summary_student_mad.update(student_val_mad.detach().item(), batch_size)
                     summary_student_mse.update(student_val_mse.detach().item(), batch_size)
                     summary_student_nme.update(student_val_nme.detach().item(), batch_size)
-                    summary_teacher_nme.update(teacher_val_nme.detach().item(), batch_size)
+                    summary_student_fix_nme.update(student_fix_val_nme.detach().item(), batch_size)
+                    summary_teacher_nme.update(techer_val_nme.detach().item(), batch_size)
+                    summary_teacher_fix_nme.update(techer_fix_val_nme.detach().item(), batch_size)
 
                 if step % cfg.TRAIN.log_interval == 0:
 
@@ -344,19 +357,22 @@ class Train(object):
                                       'Val Step %d, ' \
                                       'summary_loss: %.6f, ' \
                                       'student_summary_nme: %.6f, ' \
+                                      'student_summary_nme_fix: %.6f, ' \
                                       'teacher_summary_nme: %.6f, ' \
+                                      'teacher_summary_nme_fix: %.6f, ' \
                                       'time: %.6f' % (
                                           self.fold,step,
                                           summary_loss.avg,
                                           summary_student_nme.avg,
+                                          summary_student_fix_nme.avg,
                                           summary_teacher_nme.avg,
+                                          summary_teacher_fix_nme.avg,
                                           time.time() - t)
 
                         logger.info(log_message)
 
-
-
-            return summary_loss,summary_student_mad,summary_student_mse,summary_student_nme,summary_teacher_nme
+            return summary_loss,summary_student_mad,summary_student_mse,summary_student_nme,summary_student_fix_nme,\
+                summary_teacher_nme,summary_teacher_fix_nme
 
 
 
@@ -388,15 +404,19 @@ class Train(object):
 
             if epoch%cfg.TRAIN.test_interval==0 and epoch>0 or epoch%10==0:
 
-                summary_loss ,summary_student_mad,summary_student_mse,summary_student_nme,summary_teacher_nme= distributed_test_epoch(epoch)
+                summary_loss ,summary_student_mad,summary_student_mse,summary_student_nme,summary_student_fix_nme,\
+                    summary_teacher_nme,summary_teacher_fix_nme\
+                    = distributed_test_epoch(epoch)
 
                 val_epoch_log_message = '[fold %d], ' \
                                         '[RESULT]: VAL. Epoch: %d,' \
                                         ' summary_loss: %.5f,' \
                                         ' student_mad_score: %.5f,' \
                                         ' student_mse_score: %.5f,' \
-                                        ' student_nme_score: %.5f,' \
-                                        ' teacher_nme_score: %.5f,' \
+                                        'student_summary_nme: %.5f, ' \
+                                        'student_summary_nme_fix: %.5f, ' \
+                                        'teacher_summary_nme: %.5f, ' \
+                                        'teacher_summary_nme_fix: %.5f, ' \
                                         ' time:%.5f' % (
                                             self.fold,
                                             epoch,
@@ -404,7 +424,9 @@ class Train(object):
                                             summary_student_mad.avg,
                                             summary_student_mse.avg,
                                             summary_student_nme.avg,
+                                            summary_student_fix_nme.avg,
                                             summary_teacher_nme.avg,
+                                            summary_teacher_fix_nme.avg,
                                             (time.time() - t))
 
                 logger.info(val_epoch_log_message)
@@ -419,10 +441,11 @@ class Train(object):
 
                 #### save the model every end of epoch
                 #### save the model every end of epoch
-                current_model_saved_name='./models/fold%d_epoch_%d_val_loss_%.6f_val_nme_%.6f.pth'%(self.fold,
+                current_model_saved_name='./models/fold%d_epoch_%d_val_loss_%.6f_student_nme_%.5f_teacher_nme_%.5f.pth'%(self.fold,
                                                                                                      epoch,
                                                                                                      summary_loss.avg,
-                                                                                                     summary_student_nme.avg,)
+                                                                                                     summary_student_fix_nme.avg,
+                                                                                                     summary_teacher_fix_nme.avg)
                 logger.info('A model saved to %s' % current_model_saved_name)
                 #### save the model every end of epoch
                 if  self.ddp and torch.distributed.get_rank() == 0 :

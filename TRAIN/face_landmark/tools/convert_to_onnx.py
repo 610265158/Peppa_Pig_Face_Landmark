@@ -13,19 +13,23 @@ import re
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model', type=str,default=None, help='the thres for detect')
+parser.add_argument('--weight', type=str,default=None, help='the thres for detect')
+parser.add_argument('--input_size', type=int,default=256, help='the thres for detect')
+parser.add_argument('--model', type=str,default='teacher', help='teacher or student to inference')
 args = parser.parse_args()
 
-model_path=args.model
+weight=args.weight
+input_size=args.input_size
+model=args.model
 
 device=torch.device('cpu')
-dummy_input = torch.randn(1, 3,128, 128 , device='cpu')
+dummy_input = torch.randn(1, 3,input_size, input_size , device='cpu')
 
-style_model  = COTRAIN(inference=True).to(device)
+style_model  = COTRAIN(inference=model).to(device)
 style_model.eval()
-if model_path is not None:
+if weight is not None:
 
-    state_dict = torch.load(model_path,map_location=device)
+    state_dict = torch.load(weight,map_location=device)
     # remove saved deprecated running_* keys in InstanceNorm from the checkpoint
 
     style_model.load_state_dict(state_dict,strict=False)

@@ -25,7 +25,7 @@ class FaceDetector:
         # Inference
         t0=time.time()
         output = self.model(img_for_net)
-        print(time.time()-t0)
+        
         output = np.reshape(output, ( 15120, 16))
 
         output[:,:4] = self.xywh2xyxy(output[:, :4])

@@ -35,9 +35,10 @@ class FaceLandmark:
 
             image_croped=image_croped/255.
             image_croped=np.expand_dims(image_croped,axis=0)
-            landmark=self.model(image_croped)[0][0]
+            landmark,score=self.model(image_croped)
 
-            state=landmark[-68:]
+
+            state=score.reshape(-1)
             landmark=np.array(landmark)[:98*2].reshape(-1,2)
 
 

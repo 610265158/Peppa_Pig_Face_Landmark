@@ -7,9 +7,11 @@
 It is a simple demo including face detection and face aligment, and some optimizations were made to make the result better.
 
 
-
-
-
+The keypoint model encodes and decodes the x and y coordinates using heatmap and offset of x and y, 
+achieving SOTA on WFLW dataset. 
+Like object detection, heatmap predicts which point is a positive sample on the featuremap, 
+represented as a highlighted area, while x and y offsets are responsible for predicting the specific coordinates of these positive samples.
+And it achieves ** NME 3.95 on WFLW ** with no extern data.
 click the gif to see the video:
 [![demo](https://github.com/610265158/simpleface-engine/blob/master/figure/sample.gif)](https://v.youku.com/v_show/id_XNDM3MTY4MTM2MA==.html?spm=a2h3j.8428770.3416059.1)
 
@@ -21,31 +23,28 @@ and with face mask:
 + PyTorch
 + onnxruntime  
 + opencv
-+ python 3.7
 + easydict
 
 ## model
 
-+ 1 face detector
+### 1 face detector
 
   [yolov5-face](https://github.com/deepcam-cn/yolov5-face)
 
-+ 2 landmark detector
-
+### 2 landmark detector
+    
+###### HOW TO TRAIN
   [simple face landmark detector]( https://github.com/610265158/Peppa_Pig_Face_Landmark/tree/master/TRAIN/face_landmark) 
 
   Refer to [TRAIN/face_landmark/README.md](https://github.com/610265158/Peppa_Pig_Face_Landmark/blob/master/TRAIN/face_landmark/README.md) to train the model.
 
-  the model is trained with WFLW data. For student **mobilenetv3-large** was used  as backbone, for teacher is **efficientnetb5**.
+| WFLW    | inputsize | NME      | Flops(G) | Params(M) | Pose | Exp. | Ill. | Mu.  | Occ. | Blur | pretrained                                                                                      |
+|---------|-----------|----------|----------|-----------|------|------|------|------|------|------|-------------------------------------------------------------------------------------------------|
+| Student | 128x128   | **4.80** | 0.35     | 3.25      | 8.53 | 5.00 | 4.61 | 4.81 | 5.80 | 5.36 | [skps](https://drive.google.com/drive/folders/1JktGIKohpeLO14a6eJqNlZort_46qVC0?usp=share_link) |
+| Teacher | 128x128   | **4.17** | 1.38     | 11.53     | 7.14 | 4.32 | 4.01 | 4.03 | 4.98 | 4.68 | [skps](https://drive.google.com/drive/folders/1JktGIKohpeLO14a6eJqNlZort_46qVC0?usp=share_link) |
+| Student | 256x256   | **4.35** | 1.39     | 3.25      | 7.53 | 4.52 | 4.16 | 4.21 | 5.34 | 4.93 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing)    |
+| Teacher | 256x256   | **3.95** | 5.53     | 11.53     | 7.00 | 4.00 | 3.81 | 3.78 | 4.85 | 4.54 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing)    |
 
-  | model   | Resolution | NME(test set) | model size (int8 weights) | Pretrained                                                   |
-  | ------- | ---------- | ------------- | ------------------------- | ------------------------------------------------------------ |
-  | Student | 128x128    | 4.95          | 1.9M                      | [model128](https://drive.google.com/drive/folders/1zivD151CkOSm8KYyeC7v4YPC0aYDomry?usp=share_link) |
-  | Teacher | 128x128    | 4.64          | 6.9M                      | [model128](https://drive.google.com/drive/folders/1zivD151CkOSm8KYyeC7v4YPC0aYDomry?usp=share_link) |
-  | Student | 256x256    | 4.65          | 1.9M                      | [model256](https://drive.google.com/drive/folders/1JFVrbMx07PwL47dFlUSZ1tAMcVxVmJXo?usp=share_link) |
-  | Teacher | 256x256    | 4.47          | 6.9M                      | [model256](https://drive.google.com/drive/folders/1JFVrbMx07PwL47dFlUSZ1tAMcVxVmJXo?usp=share_link) |
-
-  
 
   I will release new model when there is better one. 7.5K trainning data is not enough for a very good model. Please label more data if needed.
 

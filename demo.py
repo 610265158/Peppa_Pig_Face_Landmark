@@ -24,7 +24,8 @@ def video(video_path_or_cam):
             star=time.time()
             boxes, landmarks, states = facer.run(image)
 
-            print(states)
+
+            
             duration=time.time()-star
             #print('one iamge cost %f s'%(duration))
 
@@ -45,9 +46,14 @@ def video(video_path_or_cam):
                 for landmarks_index in range(landmarks[face_index].shape[0]):
 
                     x_y = landmarks[face_index][landmarks_index]
-
+                    score=states[face_index][landmarks_index]
+                    color = (255, 255, 255)
+                    # if score>0.5:
+                    #     color=(255,255,255)
+                    # else:
+                    #     color = (0, 0, 255)
                     cv2.circle(img_show, (int(x_y[0]), int(x_y[1])),
-                                   color=(0, 0, 255), radius=1, thickness=2)
+                                   color=color, radius=1, thickness=2)
 
 
             cv2.namedWindow("capture", 0)
