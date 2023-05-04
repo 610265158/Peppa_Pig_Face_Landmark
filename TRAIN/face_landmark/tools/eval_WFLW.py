@@ -151,9 +151,9 @@ def get_model(weight,model='teacher'):
 
     return model
 
-def main(data_dir,weight,input_size):
+def main(data_dir,weight,input_size,model):
 
-    model=get_model(weight)
+    model=get_model(weight,model)
 
     do_eval(data_dir,model,input_size)
 
