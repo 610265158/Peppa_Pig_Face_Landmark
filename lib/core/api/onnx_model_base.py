@@ -20,7 +20,7 @@ class ONNXEngine:
 
 
         # Inference
-        y_onnx = self.session.run([self.session.get_outputs()[0].name],
+        y_onnx = self.session.run([],
                                   {self.session.get_inputs()[0].name: data})
 
 
