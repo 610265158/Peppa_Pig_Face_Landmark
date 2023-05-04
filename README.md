@@ -21,23 +21,24 @@ and with face mask:
 
 ## model
 
-+ 1 face detector
+### 1 face detector
 
   [yolov5-face](https://github.com/deepcam-cn/yolov5-face)
 
-+ 2 landmark detector
-
+### 2 landmark detector
+    
+###### HOW TO TRAIN
   [simple face landmark detector]( https://github.com/610265158/Peppa_Pig_Face_Landmark/tree/master/TRAIN/face_landmark) 
 
   Refer to [TRAIN/face_landmark/README.md](https://github.com/610265158/Peppa_Pig_Face_Landmark/blob/master/TRAIN/face_landmark/README.md) to train the model.
 
 
-| WLFW    | inputsize | NME     | Params(M) | Flops(G) | Pose | Exp. | Ill. | Mu.  | Occ. | Blur | pretrained                                                                                   |
+| WFLW    | inputsize | NME     | Flops(G)| Params(M)  | Pose | Exp. | Ill. | Mu.  | Occ. | Blur | pretrained                                                                                   |
 |---------|-----------|---------|----------|---------|------|------|------|------|------|------|----------------------------------------------------------------------------------------------|
 | Student | 128x128   |         |          |         |      |           |      |      |      |      |                                                                                              |
-| Teacher | 128x128    |         |          |         |      |         |      |      |      |      |                                                                                              |
-| Student | 256x256   | 4.35    | 1.39     | 3.25    | 7.53 | 4.52    | 4.16 | 4.21 | 5.34 | 4.93 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing) |
-| Teacher | 256x256   | 3.95    | 5.53     | 11.53   | 7.00 | 4.00    | 3.81 | 3.78 | 4.85 | 4.54 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing) |
+| Teacher | 128x128   |         |          |         |      |         |      |      |      |      |                                                                                              |
+| Student | 256x256   | **4.35**    | 1.39     | 3.25    | 7.53 | 4.52    | 4.16 | 4.21 | 5.34 | 4.93 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing) |
+| Teacher | 256x256   | **3.95**    | 5.53     | 11.53   | 7.00 | 4.00    | 3.81 | 3.78 | 4.85 | 4.54 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing) |
 
 
   I will release new model when there is better one. 7.5K trainning data is not enough for a very good model. Please label more data if needed.

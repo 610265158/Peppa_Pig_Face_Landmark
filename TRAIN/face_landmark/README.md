@@ -33,12 +33,13 @@ WLFW test set.
 Update, new model!!
 
 
-| WLFW    | inputsize |   Params(M)     | Flops(G) | Fullset | Pose | Exp. | Ill. | Mu.  | Occ. | Blur | pretrained                                                                                   |
-|---------|-----------|--------|----------|---------|------|------|------|------|------|------|----------------------------------------------------------------------------------------------|
-| Student | 128x128   |        |          |         |      |           |      |      |      |      |                                                                                              |
-| Teacher | 128x128    |        |          |         |      |         |      |      |      |      |                                                                                              |
-| Student | 256x256   | 4.35   | 1.39     | 3.25    | 7.53 | 4.52    | 4.16 | 4.21 | 5.34 | 4.93 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing) |
-| Teacher | 256x256   | 3.95   | 5.53     | 11.53   | 7.00 | 4.00    | 3.81 | 3.78 | 4.85 | 4.54 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing) |
+| WFLW    | inputsize | NME     | Flops(G)| Params(M)  | Pose | Exp. | Ill. | Mu.  | Occ. | Blur | pretrained                                                                                   |
+|---------|-----------|---------|----------|---------|------|------|------|------|------|------|----------------------------------------------------------------------------------------------|
+| Student | 128x128   |         |          |         |      |           |      |      |      |      |                                                                                              |
+| Teacher | 128x128   |         |          |         |      |         |      |      |      |      |                                                                                              |
+| Student | 256x256   | **4.35**    | 1.39     | 3.25    | 7.53 | 4.52    | 4.16 | 4.21 | 5.34 | 4.93 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing) |
+| Teacher | 256x256   | **3.95**    | 5.53     | 11.53   | 7.00 | 4.00    | 3.81 | 3.78 | 4.85 | 4.54 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing) |
+
 
 
 ## requirment
