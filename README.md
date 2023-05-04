@@ -38,13 +38,12 @@ and with face mask:
 
   Refer to [TRAIN/face_landmark/README.md](https://github.com/610265158/Peppa_Pig_Face_Landmark/blob/master/TRAIN/face_landmark/README.md) to train the model.
 
-
-| WFLW    | inputsize | NME     | Flops(G)| Params(M)  | Pose | Exp. | Ill. | Mu.  | Occ. | Blur | pretrained                                                                                   |
-|---------|-----------|---------|----------|---------|------|------|------|------|------|------|----------------------------------------------------------------------------------------------|
-| Student | 128x128   |         |          |         |      |           |      |      |      |      |                                                                                              |
-| Teacher | 128x128   |         |          |         |      |         |      |      |      |      |                                                                                              |
-| Student | 256x256   | **4.35**    | 1.39     | 3.25    | 7.53 | 4.52    | 4.16 | 4.21 | 5.34 | 4.93 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing) |
-| Teacher | 256x256   | **3.95**    | 5.53     | 11.53   | 7.00 | 4.00    | 3.81 | 3.78 | 4.85 | 4.54 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing) |
+| WFLW    | inputsize | NME      | Flops(G) | Params(M) | Pose | Exp. | Ill. | Mu.  | Occ. | Blur | pretrained                                                                                      |
+|---------|-----------|----------|----------|-----------|------|------|------|------|------|------|-------------------------------------------------------------------------------------------------|
+| Student | 128x128   | **4.80** | 0.35     | 3.25      | 8.53 | 5.00 | 4.61 | 4.81 | 5.80 | 5.36 | [skps](https://drive.google.com/drive/folders/1JktGIKohpeLO14a6eJqNlZort_46qVC0?usp=share_link) |
+| Teacher | 128x128   | **4.17** | 1.38     | 11.53     | 7.14 | 4.32 | 4.01 | 4.03 | 4.98 | 4.68 | [skps](https://drive.google.com/drive/folders/1JktGIKohpeLO14a6eJqNlZort_46qVC0?usp=share_link) |
+| Student | 256x256   | **4.35** | 1.39     | 3.25      | 7.53 | 4.52 | 4.16 | 4.21 | 5.34 | 4.93 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing)    |
+| Teacher | 256x256   | **3.95** | 5.53     | 11.53     | 7.00 | 4.00 | 3.81 | 3.78 | 4.85 | 4.54 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing)    |
 
 
   I will release new model when there is better one. 7.5K trainning data is not enough for a very good model. Please label more data if needed.
