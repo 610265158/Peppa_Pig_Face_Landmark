@@ -10,7 +10,7 @@ The keypoint model encodes and decodes the x and y coordinates using heatmap and
 achieving SOTA on WFLW dataset. 
 Like object detection, heatmap predicts which point is a positive sample on the featuremap, 
 represented as a highlighted area, while x and y offsets are responsible for predicting the specific coordinates of these positive samples.
-
+And it achieves ** NME 3.95 on WFLW ** with no extern data.
 Contact me if u have problem about it. 2120140200@mail.nankai.edu.cn :)
 
 demo pictures:
