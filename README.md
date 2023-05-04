@@ -1,4 +1,5 @@
 # Peppa_Pig_Face_Engine
+[![DOI](https://zenodo.org/badge/206305226.svg)](https://zenodo.org/badge/latestdoi/206305226)
 
 
 
