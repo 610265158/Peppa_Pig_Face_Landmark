@@ -6,6 +6,12 @@
 
 It is a simple demo including face detection and face aligment, and some optimizations were made to make the result better.
 
+
+The keypoint model encodes and decodes the x and y coordinates using heatmap and offset of x and y, 
+achieving SOTA on WFLW dataset. 
+Like object detection, heatmap predicts which point is a positive sample on the featuremap, 
+represented as a highlighted area, while x and y offsets are responsible for predicting the specific coordinates of these positive samples.
+
 click the gif to see the video:
 [![demo](https://github.com/610265158/simpleface-engine/blob/master/figure/sample.gif)](https://v.youku.com/v_show/id_XNDM3MTY4MTM2MA==.html?spm=a2h3j.8428770.3416059.1)
 

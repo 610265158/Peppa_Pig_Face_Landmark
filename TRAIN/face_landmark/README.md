@@ -6,11 +6,10 @@ A simple face aligment method, based on pytorch
 ## introduction
 
 
-It is simple and flexible, trained with wingloss , multi task learning, also with data augmentation based on headpose and face attributes(eyes state and mouth state).
-
-[CN blog](https://blog.csdn.net/qq_35606924/article/details/99711208)
-
-The model is trained for **[[pappa_pig_face_engine]](https://github.com/610265158/Peppa_Pig_Face_Engine).**
+The keypoint model encodes and decodes the x and y coordinates using heatmap and offset of x and y, 
+achieving SOTA on WFLW dataset. 
+Like object detection, heatmap predicts which point is a positive sample on the featuremap, 
+represented as a highlighted area, while x and y offsets are responsible for predicting the specific coordinates of these positive samples.
 
 Contact me if u have problem about it. 2120140200@mail.nankai.edu.cn :)
 
@@ -21,8 +20,6 @@ demo pictures:
 ![gifs](https://github.com/610265158/Peppa_Pig_Face_Engine/blob/master/figure/sample.gif)
 
 this gif is from github.com/610265158/Peppa_Pig_Face_Engine )
-
-pretrained model is placed in pretrained, in Peppa_Pig_Face_Landmark folder.
 
 
 
