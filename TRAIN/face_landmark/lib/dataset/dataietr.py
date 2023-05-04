@@ -37,8 +37,8 @@ class AlaskaDataIter():
 
         self.df = df
 
-        if self.training_flag:
-            self.balance()
+        # if self.training_flag:
+        #     self.balance()
 
         self.train_trans = A.Compose([
 

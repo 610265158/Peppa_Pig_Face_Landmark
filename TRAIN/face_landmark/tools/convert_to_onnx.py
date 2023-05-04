@@ -14,12 +14,13 @@ import re
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str,default=None, help='the thres for detect')
+parser.add_argument('--input_size', type=int,default=256, help='the thres for detect')
 args = parser.parse_args()
 
 model_path=args.model
-
+input_size=args.input_size
 device=torch.device('cpu')
-dummy_input = torch.randn(1, 3,128, 128 , device='cpu')
+dummy_input = torch.randn(1, 3,input_size, input_size , device='cpu')
 
 style_model  = COTRAIN(inference=True).to(device)
 style_model.eval()
