@@ -27,22 +27,19 @@ and with face mask:
   [yolov5-face](https://github.com/deepcam-cn/yolov5-face)
 
 ### 2 landmark detector
-    
-###### HOW TO TRAIN
-  [simple face landmark detector]( https://github.com/610265158/Peppa_Pig_Face_Landmark/tree/master/TRAIN/face_landmark) 
 
-  Refer to [TRAIN/face_landmark/README.md](https://github.com/610265158/Peppa_Pig_Face_Landmark/blob/master/TRAIN/face_landmark/README.md) to train the model.
+Simple keypoints detector.
 
-| WFLW    | inputsize | NME      | Flops(G) | Params(M) | Pose | Exp. | Ill. | Mu.  | Occ. | Blur | pretrained                                                                                      |
-|---------|-----------|----------|----------|-----------|------|------|------|------|------|------|-------------------------------------------------------------------------------------------------|
-| Student | 128x128   | **4.80** | 0.35     | 3.25      | 8.53 | 5.00 | 4.61 | 4.81 | 5.80 | 5.36 | [skps](https://drive.google.com/drive/folders/1JktGIKohpeLO14a6eJqNlZort_46qVC0?usp=share_link) |
-| Teacher | 128x128   | **4.17** | 1.38     | 11.53     | 7.14 | 4.32 | 4.01 | 4.03 | 4.98 | 4.68 | [skps](https://drive.google.com/drive/folders/1JktGIKohpeLO14a6eJqNlZort_46qVC0?usp=share_link) |
-| Student | 256x256   | **4.35** | 1.39     | 3.25      | 7.53 | 4.52 | 4.16 | 4.21 | 5.34 | 4.93 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing)    |
-| Teacher | 256x256   | **3.95** | 5.53     | 11.53     | 7.00 | 4.00 | 3.81 | 3.78 | 4.85 | 4.54 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing)    |
+| WFLW        | NME      | Flops(G) | Params(M) | Pose | Exp. | Ill. | Mu.  | Occ. | Blur | pretrained                                                                                      |
+|-------------|----------|----------|-----------|------|------|------|------|------|------|-------------------------------------------------------------------------------------------------|
+| Student@128 | **4.80** | 0.35     | 3.25      | 8.53 | 5.00 | 4.61 | 4.81 | 5.80 | 5.36 | [skps](https://drive.google.com/drive/folders/1JktGIKohpeLO14a6eJqNlZort_46qVC0?usp=share_link) |
+| Teacher@128 | **4.17** | 1.38     | 11.53     | 7.14 | 4.32 | 4.01 | 4.03 | 4.98 | 4.68 | [skps](https://drive.google.com/drive/folders/1JktGIKohpeLO14a6eJqNlZort_46qVC0?usp=share_link) |
+| Student@256 | **4.35** | 1.39     | 3.25      | 7.53 | 4.52 | 4.16 | 4.21 | 5.34 | 4.93 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing)    |
+| Teacher@256 | **3.95** | 5.53     | 11.53     | 7.00 | 4.00 | 3.81 | 3.78 | 4.85 | 4.54 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing)    |
 
+  I will release new model when there is better one.
 
-  I will release new model when there is better one. 7.5K trainning data is not enough for a very good model. Please label more data if needed.
-
+**By default student@256 is used in this project** 
 
 
 
@@ -60,7 +57,6 @@ python setup.py install
 from Skps import FaceAna
 facer = FaceAna()
 
-
 boxes, landmarks, _ = facer.run(image)
 
 ## detect images, tracing is not used, add
@@ -68,12 +64,18 @@ boxes, landmarks, _ = facer.run(image)
 ```
 
 More details refer to demo.py
+
 run `python demo.py --cam_id 0` use a camera    
 or  `python demo.py --video test.mp4`  detect for a video    
 or  `python demo.py --img_dir ./test`  detect for images dir no track   
 or  `python demo.py --video test.mp4 --mask True` if u want a face mask
 
 
+
+## How to train
+  The codes are placed in folder [TRAIN/face_landmark]( https://github.com/610265158/Peppa_Pig_Face_Landmark/tree/master/TRAIN/face_landmark) 
+
+  Refer to [TRAIN/face_landmark/README.md](https://github.com/610265158/Peppa_Pig_Face_Landmark/blob/master/TRAIN/face_landmark/README.md) to train the model.
 
 
 
