@@ -209,14 +209,17 @@ class AlaskaDataIter():
         """
         Nlandmarks = len(landmarks)
         hm = np.zeros((height, width, Nlandmarks), dtype=np.float32)
+        # if not np.array_equal(landmarks[i], [-1, -1]):
+        floored_landmarks = np.round(landmarks)
+
         for i in range(Nlandmarks):
             # if not np.array_equal(landmarks[i], [-1, -1]):
 
-            hm[:, :, i] = self.gaussian_k(landmarks[i][0],
-                                          landmarks[i][1],
+            hm[:, :, i] = self.gaussian_k(floored_landmarks[i][0],
+                                          floored_landmarks[i][1],
                                           s, height, width)
-            # else:
-            #     hm[:, :, i] = np.zeros((height, width))
+
+
         ### make offside
 
 
