@@ -216,16 +216,16 @@ class Decoder(nn.Module):
 
         self.aspp = ASPP(encoder_channels[-1], [2, 4, 8],out_channels=256)
 
-        self.upsampler1 = DecoderBlock(256, encoder_channels[-2], 256, \
-                                       use_separable_conv=True, \
-                                       use_attention=True,
-                                       kernel_size=3)
+        # self.upsampler1 = DecoderBlock(256, encoder_channels[-2], 256, \
+        #                                use_separable_conv=True, \
+        #                                use_attention=True,
+        #                                kernel_size=3)
 
-        self.upsampler2 = DecoderBlock(256, encoder_channels[-3], 128, \
-                                       use_separable_conv=True, \
-                                       use_attention=False,
-                                       use_second_conv=True,
-                                       kernel_size=3)
+        # self.upsampler2 = DecoderBlock(256, encoder_channels[-2], 128, \
+        #                                use_separable_conv=True, \
+        #                                use_attention=False,
+        #                                use_second_conv=True,
+        #                                kernel_size=3)
 
         self.apply(weight_init)
 
@@ -236,12 +236,12 @@ class Decoder(nn.Module):
 
         encx16 = self.aspp(encx16)
 
-        decx8 = self.upsampler1(encx16, encx8)
-        decx4 = self.upsampler2(decx8, encx4)
+        # decx8 = self.upsampler1(encx16, encx8)
+        # decx8 = self.upsampler2(encx16, encx8)
 
         #### semantic predict
 
-        return [decx4, decx8, encx16]
+        return [  encx16]
 
 
 class Net(nn.Module):
@@ -266,9 +266,9 @@ class Net(nn.Module):
         self.decoder = Decoder(self.encoder_out_channels)
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self.fc = nn.Linear(640,  3 + 4, bias=True)
+        self.fc = nn.Linear(256,  3 + 4, bias=True)
 
-        self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=1, stride=1, padding=0, bias=True)
+        self.hm = nn.Conv2d(in_channels=256, out_channels=98*3, kernel_size=1, stride=1, padding=0, bias=True)
 
         weight_init(self.fc)
         weight_init(self.hm)
@@ -281,18 +281,18 @@ class Net(nn.Module):
 
         features = [x] + features
 
-        [decx4, decx8, decx16] = self.decoder(features)
+        [  decx16] = self.decoder(features)
 
         fmx16 = self._avg_pooling(decx16)
-        fmx8 = self._avg_pooling(decx8)
-        fmx4 = self._avg_pooling(decx4)
+        # fmx8 = self._avg_pooling(decx8)
 
-        fm = torch.cat([fmx4, fmx8, fmx16], dim=1)
+
+        fm = torch.cat([  fmx16], dim=1)
 
         fm = fm.view(bs, -1)
         x = self.fc(fm)
 
-        hm = self.hm(decx4)
+        hm = self.hm(decx16)
 
 
         return x, hm, [hm]
@@ -316,9 +316,9 @@ class TeacherNet(nn.Module):
 
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self.fc = nn.Linear(640,  3 + 4, bias=True)
+        self.fc = nn.Linear(256,  3 + 4, bias=True)
 
-        self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=1, stride=1, padding=0, bias=True)
+        self.hm = nn.Conv2d(in_channels=256, out_channels=98*3, kernel_size=1, stride=1, padding=0, bias=True)
 
         weight_init(self.fc)
         weight_init(self.hm)
@@ -329,18 +329,18 @@ class TeacherNet(nn.Module):
         features = self.encoder(x)
 
         features = [x] + features
-        [decx4, decx8, decx16] = self.decoder(features)
+        [  decx16] = self.decoder(features)
 
         fmx16 = self._avg_pooling(decx16)
-        fmx8 = self._avg_pooling(decx8)
-        fmx4 = self._avg_pooling(decx4)
+        # fmx8 = self._avg_pooling(decx8)
 
-        fm = torch.cat([fmx4, fmx8, fmx16], dim=1)
+
+        fm = torch.cat([  fmx16], dim=1)
 
         fm = fm.view(bs, -1)
         x = self.fc(fm)
 
-        hm = self.hm(decx4)
+        hm = self.hm(decx16)
 
         return x, hm, [hm]
 
@@ -556,8 +556,8 @@ class COTRAIN(nn.Module):
     def forward(self, x, gt=None, gt_hm=None):
 
         student_pre, student_hm, student_fms = self.student(x)
-
-        teacher_pre, teacher_hm, teacher_fms = self.teacher(x)
+        #
+        # teacher_pre, teacher_hm, teacher_fms = self.teacher(x)
 
         if self.inference :
             if self.inference=='teacher':
@@ -593,9 +593,9 @@ if __name__ == '__main__':
 
     from thop import profile
 
-    model = COTRAIN(inference='teacher')
+    model = COTRAIN(inference='student')
 
-    input = torch.randn(1, 3, 128, 128)
+    input = torch.randn(1, 3, 256, 256)
     flops, params = profile(model, inputs=(input,))
     print(flops / 1024 / 1024 / 1024)
     print(params / 1024 / 1024)
