@@ -20,7 +20,6 @@ class FaceDetector:
         self.score_thrs=cfg['score_thrs']
         self.iou_thrs = cfg['iou_thrs']
 
-        print(self.input_size[0])
     def __call__(self, image):
 
         t0=time.time()

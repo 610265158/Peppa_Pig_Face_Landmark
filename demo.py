@@ -6,7 +6,7 @@ import os
 import argparse
 
 
-from lib.core.api.facer import FaceAna
+from Skps import FaceAna
 
 def video(video_path_or_cam):
     facer = FaceAna()
