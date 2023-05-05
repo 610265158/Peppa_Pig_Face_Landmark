@@ -18,7 +18,6 @@ and with face mask:
 + PyTorch
 + onnxruntime  
 + opencv
-+ easydict
 
 ## model
 
