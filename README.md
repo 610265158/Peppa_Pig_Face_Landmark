@@ -66,9 +66,7 @@ More details refer to demo.py
 
 run `python demo.py --cam_id 0` use a camera    
 or  `python demo.py --video test.mp4`  detect for a video    
-or  `python demo.py --img_dir ./test`  detect for images dir no track   
-or  `python demo.py --video test.mp4 --mask True` if u want a face mask
-
+or  `python demo.py --img_dir ./test`  detect for images dir no track
 
 
 ## How to train
