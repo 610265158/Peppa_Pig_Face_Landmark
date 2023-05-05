@@ -1,39 +1,44 @@
-import sys
-sys.path.append('.')
+import os
 import numpy as np
 import cv2
 
 import time
-import  torch
+import pathlib
 
-from config import config as cfg
 
-from lib.core.api.onnx_model_base import ONNXEngine
-
+from core.api.onnx_model_base import ONNXEngine
+from logger.logger import logger
 class FaceDetector:
-    def __init__(self,model_path='pretrained/yolov5n-0.5.onnx'):
+    def __init__(self,cfg):
 
+        root_path = pathlib.Path(__file__).resolve().parents[2]
+
+        model_path=os.path.join(root_path,cfg['model_path'])
 
         self.model=ONNXEngine(model_path)
-        self.input_size=(384,640)
+        self.input_size=cfg['input_shape']
+        self.score_thrs=cfg['score_thrs']
+        self.iou_thrs = cfg['iou_thrs']
 
-    def __call__(self, image,
-                 score_threshold=cfg.DETECT.thres,
-                 iou_threshold=cfg.DETECT.iou_thres):
+        print(self.input_size[0])
+    def __call__(self, image):
+
+        t0=time.time()
         img_for_net, recover_info = self.preprocess(image)
 
-        # Inference
-        t0=time.time()
+
         output = self.model(img_for_net)
         
         output = np.reshape(output, ( 15120, 16))
 
         output[:,:4] = self.xywh2xyxy(output[:, :4])
 
-        bboxes=self.py_nms(output,iou_threshold,score_threshold)
+        bboxes=self.py_nms(output,self.iou_thrs,self.score_thrs)
 
         bboxes[:, :4] = self.scale_coords(bboxes[:, :4], recover_info)
 
+        duration=time.time()-t0
+        logger.info('detect done, time consume: %.5f'%(duration))
 
         return bboxes
 
@@ -68,7 +73,7 @@ class FaceDetector:
 
     def xywh2xyxy(self, x):
         # Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
-        y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
+        y =  np.copy(x)
         y[:, 0] = x[:, 0] - x[:, 2] / 2  # top left x
         y[:, 1] = x[:, 1] - x[:, 3] / 2  # top left y
         y[:, 2] = x[:, 0] + x[:, 2] / 2  # bottom right x

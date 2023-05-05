@@ -1,34 +1,54 @@
+import os.path
+
 import cv2
 import numpy as np
+import yaml
+import pathlib
+import logging
 
-from lib.core.api.face_landmark import FaceLandmark
-from lib.core.api.face_detector import FaceDetector
-from lib.core.smoother.lk import GroupTrack,OneEuroFilter,EmaFilter
+from core.api.face_landmark import FaceLandmark
+from core.api.face_detector import FaceDetector
+from core.smoother.lk import GroupTrack, EmaFilter
 
-from config import config as cfg
+from logger.logger import logger
+
+def get_cfg():
+
+    root_path = pathlib.Path(__file__).resolve().parents[2]
+
+    cfg_path=os.path.join(root_path,'config','Skps.yml')
+    with open(cfg_path, encoding="UTF-8") as f:
+        cfg = yaml.load(f, Loader=yaml.FullLoader)
+    return cfg
+
 
 class FaceAna():
 
-    '''
-    by default the top3 facea sorted by area will be calculated for time reason
-    '''
-    def __init__(self):
 
-        
-        self.face_detector = FaceDetector(model_path=cfg.DETECT.model_path)
-        self.face_landmark = FaceLandmark(model_path=cfg.KEYPOINTS.model_path)
-        self.trace = GroupTrack()
+    def __init__(self,verbose=False):
 
+
+        if verbose:
+            logger.setLevel(logging.DEBUG)
+
+
+        cfg=get_cfg()
+
+        self.face_detector = FaceDetector(cfg['Skps']['Detect'])
+        self.face_landmark = FaceLandmark(cfg['Skps']['Keypoints'])
+        self.trace = GroupTrack(cfg['Skps']['Trace'])
+
+        logger.info('model init done!')
         ###another thread should run detector in a slow way and update the track_box
         self.track_box=None
         self.previous_image=None
         self.previous_box=None
 
         self.diff_thres=5
-        self.top_k = cfg.DETECT.topk
-        self.min_face=cfg.DETECT.min_face
-        self.iou_thres=cfg.TRACE.iou_thres
-        self.alpha=cfg.TRACE.smooth_box
+        self.top_k = cfg['Skps']['Detect']['topk']
+        self.min_face=cfg['Skps']['Detect']['min_face']
+        self.iou_thres=cfg['Skps']['Trace']['iou_thres']
+        self.alpha=cfg['Skps']['Trace']['smooth_box']
 
         self.filter = EmaFilter(self.alpha)
 

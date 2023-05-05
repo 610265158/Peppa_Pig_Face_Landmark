@@ -1,17 +1,17 @@
 #-*-coding:utf-8-*-
-from config import config as cfg
+
 import numpy as np
 import math
 
 class GroupTrack():
-    def __init__(self):
+    def __init__(self,cfg):
         self.old_frame = None
         self.previous_landmarks_set = None
 
         self.with_landmark = True
-        self.thres=cfg.TRACE.pixel_thres
+        self.thres=cfg['pixel_thres']
         #self.alpha=cfg.TRACE.smooth_landmark
-        self.iou_thres=cfg.TRACE.iou_thres
+        self.iou_thres=cfg['iou_thres']
 
         self.filter=OneEuroFilter()
         # self.filter=EmaFilter(0.5)

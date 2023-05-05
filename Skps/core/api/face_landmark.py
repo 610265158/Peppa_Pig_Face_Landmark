@@ -1,10 +1,13 @@
 # -*-coding:utf-8-*-
+import time
 
 import cv2
 import numpy as np
+import pathlib
+import os
 
-from config import config as cfg
-from lib.core.api.onnx_model_base import ONNXEngine
+from core.api.onnx_model_base import ONNXEngine
+from logger.logger import logger
 
 
 
@@ -13,13 +16,19 @@ class FaceLandmark:
         the model was constructed by the params in config.py
     """
 
-    def __init__(self,model_path='pretrained/kps.MNN'):
+    def __init__(self,cfg):
+        root_path = pathlib.Path(__file__).resolve().parents[2]
+
+        model_path = os.path.join(root_path, cfg['model_path'])
+
+
         self.model=ONNXEngine(model_path)
         self.min_face = 20
-        self.keypoints_num = cfg.KEYPOINTS.p_num
+        self.keypoints_num = cfg['num_points']
 
-        self.input_size=(128,128)
+        self.input_size=cfg['input_shape']
 
+        self.extend=cfg['base_extend_range']
     ##below are the method  run for one by one, will be deprecated in the future
     def __call__(self, img, bboxes):
 
@@ -27,6 +36,7 @@ class FaceLandmark:
         landmark_result = []
         states_result = []
 
+        t0=time.time()
         for i, bbox in enumerate(bboxes):
 
             image_croped, detail = self.preprocess(img, bbox, i)
@@ -37,7 +47,6 @@ class FaceLandmark:
             image_croped=np.expand_dims(image_croped,axis=0)
             landmark,score=self.model(image_croped)
 
-
             state=score.reshape(-1)
             landmark=np.array(landmark)[:98*2].reshape(-1,2)
 
@@ -47,6 +56,10 @@ class FaceLandmark:
             if landmark is not None:
                 landmark_result.append(landmark)
                 states_result.append(state)
+        if len(bboxes)>0:
+            duration=time.time()-t0
+
+            logger.info('keypoints done, time consume: %.5f and %.5f per face' % (duration,duration/len(bboxes)))
 
         return np.array(landmark_result), np.array(states_result)
 
@@ -67,7 +80,7 @@ class FaceLandmark:
                                   borderType=cv2.BORDER_CONSTANT)
         bbox += add
 
-        face_width = (1 + 2 * cfg.KEYPOINTS.base_extend_range[0]) * bbox_width
+        face_width = (1 + 2 * self.extend[0]) * bbox_width
         center = [(bbox[0] + bbox[2]) // 2, (bbox[1] + bbox[3]) // 2]
 
         ### make the box as square
@@ -77,12 +90,12 @@ class FaceLandmark:
         bbox[3] = center[1] + face_width // 2
 
         # crop
-        bbox = bbox.astype(np.int)
+        bbox = bbox.astype(np.int32)
         crop_image = bimg[bbox[1]:bbox[3], bbox[0]:bbox[2], :]
 
         h, w, _ = crop_image.shape
-        crop_image = cv2.resize(crop_image, (cfg.KEYPOINTS.input_shape[1],
-                                             cfg.KEYPOINTS.input_shape[0]))
+        crop_image = cv2.resize(crop_image, (self.input_size[1],
+                                             self.input_size[0]))
 
 
 
