@@ -26,11 +26,8 @@ class FaceAna():
 
 
     def __init__(self,verbose=False):
-
-
         if verbose:
             logger.setLevel(logging.DEBUG)
-
 
         cfg=get_cfg()
 
@@ -84,8 +81,19 @@ class FaceAna():
 
         self.track_box = self.judge_boxs(boxes_return, tmp_box)
 
+        result=self.to_dict(self.track_box,landmarks,states)
+        return result
+    def to_dict(self,bboxes,kps,states):
+        ans = []
 
-        return self.track_box,landmarks,states
+        for i in range(len(bboxes)):
+            one_res = {}
+            one_res['box'] = bboxes[i]
+
+            one_res['kps'] =kps[i]
+            one_res["scores"]=states[i]
+            ans.append(one_res)
+        return ans
 
     def diff_frames(self,previous_frame,image):
         '''

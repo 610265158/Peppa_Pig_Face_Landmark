@@ -22,36 +22,31 @@ def video(video_path_or_cam):
             img_show = image.copy()
 
             star=time.time()
-            boxes, landmarks, states = facer.run(image)
-
-
-            
+            result = facer.run(image)
+            print(result)
             duration=time.time()-star
             #print('one iamge cost %f s'%(duration))
 
             fps=1/duration
             cv2.putText(img_show, "X: " + "{:7.2f}".format(fps), (20, 20), cv2.FONT_HERSHEY_SIMPLEX,
                         0.75, (0, 0, 0), thickness=2)
-            for face_index in range(landmarks.shape[0]):
+
+            for face_index in range(len(result)):
 
                 #######head pose need develop
                 #reprojectdst, euler_angle=get_head_pose(landmarks[face_index],img_show)
 
-                if args.mask:
-                    face_bbox_keypoints = np.concatenate(
-                        (landmarks[face_index][:17, :], np.flip(landmarks[face_index][17:27, :], axis=0)), axis=0)
+                cur_face_kps=result[face_index]['kps']
+                cur_face_kps_score=result[face_index]['scores']
+                for landmarks_index in range(cur_face_kps.shape[0]):
 
-                    pattern = cv2.fillPoly(pattern, [face_bbox_keypoints.astype(np.int)], (1., 1., 1.))
-
-                for landmarks_index in range(landmarks[face_index].shape[0]):
-
-                    x_y = landmarks[face_index][landmarks_index]
-                    score=states[face_index][landmarks_index]
-                    color = (255, 255, 255)
-                    # if score>0.5:
-                    #     color=(255,255,255)
-                    # else:
-                    #     color = (0, 0, 255)
+                    x_y = cur_face_kps[landmarks_index]
+                    score=cur_face_kps_score[landmarks_index]
+                    # color = (255, 255, 255)
+                    if score>0.8:
+                        color=(255,255,255)
+                    else:
+                        color = (0, 0, 255)
                     cv2.circle(img_show, (int(x_y[0]), int(x_y[1])),
                                    color=color, radius=1, thickness=2)
 
