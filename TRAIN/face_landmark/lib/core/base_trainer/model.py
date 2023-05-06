@@ -8,10 +8,6 @@ import torch.nn.functional as F
 
 import timm
 
-from torchvision.models.mobilenetv3 import InvertedResidual, InvertedResidualConfig
-
-
-# from lib.core.base_trainer.mobileone import MobileOneBlock
 class SeparableConv2d(nn.Module):
     """ Separable Conv
     """
@@ -94,25 +90,6 @@ class ASPP(nn.Module):
         res = self.bn_act(res)
 
         return self.project(res)
-
-
-class FeatureFuc(nn.Module):
-    def __init__(self, inchannels=128):
-        super(FeatureFuc, self).__init__()
-
-        self.block1 = InvertedResidual(cnf=InvertedResidualConfig(inchannels, 5, 256, inchannels, False, "RE", 1, 1, 1),
-                                       norm_layer=partial(nn.BatchNorm2d, ))
-
-        self.block2 = InvertedResidual(cnf=InvertedResidualConfig(inchannels, 5, 256, inchannels, False, "RE", 1, 1, 1),
-                                       norm_layer=partial(nn.BatchNorm2d, ))
-
-    def forward(self, x):
-        y1 = self.block1(x)
-
-        y2 = self.block2(y1)
-
-        return y2
-
 
 class SCSEModule(nn.Module):
     def __init__(self, in_channels, reduction=4):
@@ -211,22 +188,29 @@ def weight_init(m):
 
 class Decoder(nn.Module):
 
-    def __init__(self, encoder_channels):
+    def __init__(self, encoder_channels,aspp=True):
         super(Decoder, self).__init__()
 
-        self.aspp = ASPP(encoder_channels[-1], [2, 4, 8],out_channels=256)
+        if aspp:
+            self.aspp = ASPP(encoder_channels[-1], [2, 4, 8],out_channels=256)
 
-        # self.upsampler1 = DecoderBlock(256, encoder_channels[-2], 256, \
-        #                                use_separable_conv=True, \
-        #                                use_attention=True,
-        #                                kernel_size=3)
+            # self.upsampler1 = DecoderBlock(256, encoder_channels[-2], 256, \
+            #                                use_separable_conv=True, \
+            #                                use_attention=True,
+            #                                kernel_size=3)
 
-        self.upsampler2 = DecoderBlock(256, encoder_channels[-2], 128, \
-                                       use_separable_conv=True, \
-                                       use_attention=False,
-                                       use_second_conv=True,
-                                       kernel_size=3)
-
+            self.upsampler2 = DecoderBlock(256, encoder_channels[-2], 128, \
+                                           use_separable_conv=True, \
+                                           use_attention=False,
+                                           use_second_conv=True,
+                                           kernel_size=3)
+        else:
+            self.aspp=nn.Identity()
+            self.upsampler2 = DecoderBlock(encoder_channels[-1], encoder_channels[-2], 128, \
+                                           use_separable_conv=True, \
+                                           use_attention=False,
+                                           use_second_conv=True,
+                                           kernel_size=3)
         self.apply(weight_init)
 
     def forward(self, features):
@@ -286,7 +270,6 @@ class Net(nn.Module):
         fmx16 = self._avg_pooling(decx16)
         fmx8 = self._avg_pooling(decx8)
 
-
         fm = torch.cat([ fmx8, fmx16], dim=1)
 
         fm = fm.view(bs, -1)
@@ -306,17 +289,17 @@ class TeacherNet(nn.Module):
         self.encoder = timm.create_model(model_name='hrnet_w18',
                                          pretrained=True,
                                          features_only=True,
-                                         out_indices=[0, 1, 2, 3],
+                                         out_indices=[ 2, 3],
                                          in_chans=3,
                                          )
 
         self.encoder.out_channels = [3, 64, 128, 256, 512]
 
-        self.decoder = Decoder(self.encoder.out_channels)
+        self.decoder = Decoder(self.encoder.out_channels,aspp=False)
 
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self.fc = nn.Linear(384,  3 + 4, bias=True)
+        self.fc = nn.Linear(640,  3 + 4, bias=True)
 
         self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=1, stride=1, padding=0, bias=True)
 
@@ -328,7 +311,7 @@ class TeacherNet(nn.Module):
         bs = x.size(0)
         features = self.encoder(x)
 
-        features = [x] + features
+        features = [x,x,x] + features
         [ decx8, decx16] = self.decoder(features)
 
         fmx16 = self._avg_pooling(decx16)
@@ -553,6 +536,7 @@ class COTRAIN(nn.Module):
 
         return loc,loc_fix,score
 
+    @torch.complie()
     def forward(self, x, gt=None, gt_hm=None):
 
         student_pre, student_hm, student_fms = self.student(x)
