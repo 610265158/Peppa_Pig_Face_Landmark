@@ -592,11 +592,15 @@ if __name__ == '__main__':
     import torchvision
 
     from thop import profile
+    from thop import clever_format
 
     model = COTRAIN(inference='teacher')
 
-    input = torch.randn(1, 3, 128, 128)
-    flops, params = profile(model, inputs=(input,))
-    print(flops / 1024 / 1024 / 1024)
-    print(params / 1024 / 1024)
+    input = torch.randn(1, 3, 256, 256)
+    macs, params = profile(model, inputs=(input,))
+
+    macs, params = clever_format([macs, params], "%.3f")
+
+    print(macs)
+    print(params)
 
