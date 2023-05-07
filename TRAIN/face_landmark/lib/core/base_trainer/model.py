@@ -194,20 +194,24 @@ class Decoder(nn.Module):
         if aspp:
             self.aspp = ASPP(encoder_channels[-1], [2, 4, 8],out_channels=256)
 
-            # self.upsampler1 = DecoderBlock(256, encoder_channels[-2], 256, \
-            #                                use_separable_conv=True, \
-            #                                use_attention=True,
-            #                                kernel_size=3)
+            self.upsampler1 = DecoderBlock(256, encoder_channels[-2], 256, \
+                                           use_separable_conv=True, \
+                                           use_attention=True,
+                                           kernel_size=3)
 
-            self.upsampler2 = DecoderBlock(256, encoder_channels[-2], 128, \
+            self.upsampler2 = DecoderBlock(256, encoder_channels[-3], 128, \
                                            use_separable_conv=True, \
                                            use_attention=False,
                                            use_second_conv=True,
                                            kernel_size=3)
         else:
             self.aspp=nn.Identity()
-            self.upsampler2 = DecoderBlock(encoder_channels[-1], encoder_channels[-2], 128, \
+            self.upsampler1 = DecoderBlock(encoder_channels[-1], encoder_channels[-2], 256, \
                                            use_separable_conv=True, \
+                                           use_attention=True,
+                                           kernel_size=3)
+            self.upsampler2 = DecoderBlock(256, encoder_channels[-3], 128, \
+                                           use_separable_conv=False, \
                                            use_attention=False,
                                            use_second_conv=True,
                                            kernel_size=3)
@@ -220,12 +224,11 @@ class Decoder(nn.Module):
 
         encx16 = self.aspp(encx16)
 
-        # decx8 = self.upsampler1(encx16, encx8)
-        decx8 = self.upsampler2(encx16, encx8)
+        decx8 = self.upsampler1(encx16, encx8)
+        decx4 = self.upsampler2(decx8, encx4)
 
         #### semantic predict
-
-        return [ decx8, encx16]
+        return [ decx4,decx8, encx16]
 
 
 class Net(nn.Module):
@@ -250,7 +253,7 @@ class Net(nn.Module):
         self.decoder = Decoder(self.encoder_out_channels)
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self.fc = nn.Linear(384,  3 + 4, bias=True)
+        self.fc = nn.Linear(640,  3 + 4, bias=True)
 
         self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=1, stride=1, padding=0, bias=True)
 
@@ -265,17 +268,18 @@ class Net(nn.Module):
 
         features = [x] + features
 
-        [ decx8, decx16] = self.decoder(features)
+        [ decx4,decx8, decx16] = self.decoder(features)
 
         fmx16 = self._avg_pooling(decx16)
         fmx8 = self._avg_pooling(decx8)
+        fmx4 = self._avg_pooling(decx4)
 
-        fm = torch.cat([ fmx8, fmx16], dim=1)
+        fm = torch.cat([ fmx4,fmx8, fmx16], dim=1)
 
         fm = fm.view(bs, -1)
         x = self.fc(fm)
 
-        hm = self.hm(decx8)
+        hm = self.hm(decx4)
 
 
         return x, hm, [hm]
@@ -289,7 +293,7 @@ class TeacherNet(nn.Module):
         self.encoder = timm.create_model(model_name='hrnet_w18',
                                          pretrained=True,
                                          features_only=True,
-                                         out_indices=[ 2, 3],
+                                         out_indices=[ 1, 2, 3],
                                          in_chans=3,
                                          )
 
@@ -299,7 +303,7 @@ class TeacherNet(nn.Module):
 
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self.fc = nn.Linear(640,  3 + 4, bias=True)
+        self.fc = nn.Linear(896,  3 + 4, bias=True)
 
         self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=1, stride=1, padding=0, bias=True)
 
@@ -311,19 +315,20 @@ class TeacherNet(nn.Module):
         bs = x.size(0)
         features = self.encoder(x)
 
-        features = [x,x,x] + features
-        [ decx8, decx16] = self.decoder(features)
+        features = [x,x] + features
+        [ decx4,decx8, decx16] = self.decoder(features)
 
         fmx16 = self._avg_pooling(decx16)
         fmx8 = self._avg_pooling(decx8)
+        fmx4 = self._avg_pooling(decx4)
 
 
-        fm = torch.cat([ fmx8, fmx16], dim=1)
+        fm = torch.cat([ fmx4,fmx8, fmx16], dim=1)
 
         fm = fm.view(bs, -1)
         x = self.fc(fm)
 
-        hm = self.hm(decx8)
+        hm = self.hm(decx4)
 
         return x, hm, [hm]
 
@@ -536,10 +541,10 @@ class COTRAIN(nn.Module):
 
         return loc,loc_fix,score
 
-    @torch.complie()
+    # @torch.complie()
     def forward(self, x, gt=None, gt_hm=None):
 
-        student_pre, student_hm, student_fms = self.student(x)
+        # student_pre, student_hm, student_fms = self.student(x)
 
         teacher_pre, teacher_hm, teacher_fms = self.teacher(x)
 
