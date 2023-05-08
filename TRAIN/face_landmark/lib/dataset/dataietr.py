@@ -44,12 +44,12 @@ class AlaskaDataIter():
 
             A.RandomBrightnessContrast(p=0.5),
             A.HueSaturationValue(p=0.5),
-            A.GaussianBlur(p=0.3),
+            A.GaussianBlur(p=0.5),
             A.ToGray(p=0.1),
-            A.GaussNoise(p=0.2),
+            A.GaussNoise(p=0.5),
             A.CoarseDropout(max_holes=8, max_width=16,
                             max_height=16,
-                            p=0.2)
+                            p=0.5)
 
         ])
 
