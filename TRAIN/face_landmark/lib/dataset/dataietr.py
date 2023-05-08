@@ -365,10 +365,10 @@ class AlaskaDataIter():
         ### hm size inputsize//4
 
         kps = label.reshape([-1, 2])
-        kps[:, 0] *= cfg.MODEL.win // 8
-        kps[:, 1] *= cfg.MODEL.hin // 8
+        kps[:, 0] *= cfg.MODEL.win // 4
+        kps[:, 1] *= cfg.MODEL.hin // 4
 
-        hm = self.generate_hm(cfg.MODEL.hin // 8, cfg.MODEL.win // 8, kps, 1.5)
+        hm = self.generate_hm(cfg.MODEL.hin // 4, cfg.MODEL.win // 4, kps, 3)
 
         hm = np.transpose(hm, axes=[2, 0, 1])
 

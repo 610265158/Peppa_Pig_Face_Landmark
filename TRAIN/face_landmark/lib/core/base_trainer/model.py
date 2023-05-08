@@ -211,7 +211,7 @@ class Decoder(nn.Module):
                                            use_attention=True,
                                            kernel_size=3)
             self.upsampler2 = DecoderBlock(256, encoder_channels[-3], 128, \
-                                           use_separable_conv=False, \
+                                           use_separable_conv=True, \
                                            use_attention=False,
                                            use_second_conv=True,
                                            kernel_size=3)
@@ -541,10 +541,10 @@ class COTRAIN(nn.Module):
 
         return loc,loc_fix,score
 
-    # @torch.complie()
+    @torch.compile()
     def forward(self, x, gt=None, gt_hm=None):
 
-        # student_pre, student_hm, student_fms = self.student(x)
+        student_pre, student_hm, student_fms = self.student(x)
 
         teacher_pre, teacher_hm, teacher_fms = self.teacher(x)
 

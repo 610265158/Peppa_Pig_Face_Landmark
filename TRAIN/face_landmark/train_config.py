@@ -43,7 +43,7 @@ config.DATA = edict()
 config.DATA.root_path='../WFLW_images'
 config.DATA.train_f_path='../WFLW_annotations/list_98pt_rect_attr_train_test/list_98pt_rect_attr_train.txt'
 config.DATA.val_f_path='../WFLW_annotations/list_98pt_rect_attr_train_test/list_98pt_rect_attr_test.txt'
-config.DATA.extra_data=False
+config.DATA.extra_data=True
 
 
 config.DATA.base_extend_range=[0.1,0.2]                 ###extand
