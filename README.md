@@ -56,7 +56,7 @@ python setup.py install
 from Skps import FaceAna
 facer = FaceAna()
 
-boxes, landmarks, _ = facer.run(image)
+result= facer.run(image)
 
 ## detect images, tracing is not used, add
 ##  facer.reset()
