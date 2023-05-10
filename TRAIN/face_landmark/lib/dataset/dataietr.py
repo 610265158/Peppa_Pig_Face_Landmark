@@ -368,7 +368,7 @@ class AlaskaDataIter():
         kps[:, 0] *= cfg.MODEL.win // 4
         kps[:, 1] *= cfg.MODEL.hin // 4
 
-        hm = self.generate_hm(cfg.MODEL.hin // 4, cfg.MODEL.win // 4, kps, 3)
+        hm = self.generate_hm(cfg.MODEL.hin // 4, cfg.MODEL.win // 4, kps, 2)
 
         hm = np.transpose(hm, axes=[2, 0, 1])
 

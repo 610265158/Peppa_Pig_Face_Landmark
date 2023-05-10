@@ -293,44 +293,51 @@ class TeacherNet(nn.Module):
         self.encoder = timm.create_model(model_name='hrnet_w18',
                                          pretrained=True,
                                          features_only=True,
-                                         out_indices=[ 1, 2, 3],
+                                         out_indices=[ 1, 2, 3, 4],
                                          in_chans=3,
                                          )
 
-        self.encoder.out_channels = [3, 64, 128, 256, 512]
+        self.encoder.out_channels = [3, 128, 256, 512,1024]
 
-        self.decoder = Decoder(self.encoder.out_channels,aspp=False)
 
         self._avg_pooling = nn.AdaptiveAvgPool2d(1)
 
-        self.fc = nn.Linear(896,  3 + 4, bias=True)
+        self.fc = nn.Linear(1024,  3 + 4, bias=True)
 
-        self.hm = nn.Conv2d(in_channels=128, out_channels=98*3, kernel_size=1, stride=1, padding=0, bias=True)
+        self.hm = SeparableConv2d(in_channels=128+256+512, out_channels=98*3, kernel_size=3, stride=1, padding=1, bias=True)
 
         weight_init(self.fc)
         weight_init(self.hm)
 
+
+    def  decode(self,features):
+        encx4,encx8,encx16,encx32=features
+
+        n,c,h,w=encx4.size()
+
+        encx8tox4=torch.nn.functional.interpolate(encx8,size=[h,w],mode='bilinear')
+        encx16tox4 = torch.nn.functional.interpolate(encx16, size=[h, w], mode='bilinear')
+
+        decx4 =torch.cat([encx4,encx8tox4,encx16tox4],dim=1)
+        return decx4
     def forward(self, x):
         """Sequentially pass `x` trough model`s encoder, decoder and heads"""
         bs = x.size(0)
         features = self.encoder(x)
 
-        features = [x,x] + features
-        [ decx4,decx8, decx16] = self.decoder(features)
 
-        fmx16 = self._avg_pooling(decx16)
-        fmx8 = self._avg_pooling(decx8)
-        fmx4 = self._avg_pooling(decx4)
+        decx4=self.decode(features)
 
+        fmx32 = self._avg_pooling(features[-1])
 
-        fm = torch.cat([ fmx4,fmx8, fmx16], dim=1)
-
-        fm = fm.view(bs, -1)
+        fm = fmx32.view(bs, -1)
         x = self.fc(fm)
 
         hm = self.hm(decx4)
 
         return x, hm, [hm]
+
+
 
 
 
@@ -592,4 +599,5 @@ if __name__ == '__main__':
 
     print(macs)
     print(params)
+
 

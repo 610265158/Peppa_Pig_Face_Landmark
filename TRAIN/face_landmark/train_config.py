@@ -22,7 +22,7 @@ config.TRAIN.epoch = 100
 config.TRAIN.early_stop=20
 config.TRAIN.test_interval=1
 
-config.TRAIN.init_lr = 1.e-3
+config.TRAIN.init_lr = 2.e-3
 config.TRAIN.warmup_step=1500
 config.TRAIN.weight_decay_factor = 5.e-4                                    ####l2
 config.TRAIN.vis=False                                                      #### if to check the training data
@@ -32,8 +32,8 @@ config.TRAIN.gradient_clip=-5
 
 config.MODEL = edict()
 config.MODEL.model_path = './models/'                                        ## save directory
-config.MODEL.hin =  256                                                     # input size during training , 128,160,   depends on
-config.MODEL.win = 256
+config.MODEL.hin =  128                                                     # input size during training , 128,160,   depends on
+config.MODEL.win = 128
 
 config.MODEL.out_channel=98*2+3+4    # output vector    68 points , 3 headpose ,4 cls params,(left eye, right eye, mouth, big mouth open)
 
