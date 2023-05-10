@@ -27,12 +27,12 @@ this gif is from github.com/610265158/Peppa_Pig_Face_Engine )
 
 WLFW test set.
 
-| WFLW    | inputsize | NME      | Flops(G) | Params(M) | Pose | Exp. | Ill. | Mu.  | Occ. | Blur | pretrained                                                                                      |
-|---------|-----------|----------|----------|-----------|------|------|------|------|------|------|-------------------------------------------------------------------------------------------------|
-| Student | 128x128   | **4.80** | 0.35     | 3.25      | 8.53 | 5.00 | 4.61 | 4.81 | 5.80 | 5.36 | [skps](https://drive.google.com/drive/folders/1JktGIKohpeLO14a6eJqNlZort_46qVC0?usp=share_link) |
-| Teacher | 128x128   | **4.17** | 1.38     | 11.53     | 7.14 | 4.32 | 4.01 | 4.03 | 4.98 | 4.68 | [skps](https://drive.google.com/drive/folders/1JktGIKohpeLO14a6eJqNlZort_46qVC0?usp=share_link) |
-| Student | 256x256   | **4.35** | 1.39     | 3.25      | 7.53 | 4.52 | 4.16 | 4.21 | 5.34 | 4.93 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing)    |
-| Teacher | 256x256   | **3.95** | 5.53     | 11.53     | 7.00 | 4.00 | 3.81 | 3.78 | 4.85 | 4.54 | [skps](https://drive.google.com/drive/folders/1Y8FvJV1X5YTUkwt5MywVFvqzStpxRK_S?usp=sharing)    |
+| Model       | NME      | Flops(G) | Params(M) | Pose | Exp. | Ill. | Mu.  | Occ. | Blur | pretrained                                                                                      |
+|-------------|----------|----------|-----------|------|------|------|------|------|------|-------------------------------------------------------------------------------------------------|
+| Student@128 | **4.62** | 0.38     | 3.41      | 8.03 | 4.74 | 4.46 | 4.55 | 5.61 | 5.17 | [skps](https://drive.google.com/drive/folders/1qi3BfS-pJgMTrL5bPzcIJxh0pLxHrGxd?usp=sharing) |
+| Teacher@128 | **4.02** | 1.44     | 11.23     | 6.84 | 4.10 | 3.93 | 3.90 | 4.84 | 4.56 | [skps](https://drive.google.com/drive/folders/1qi3BfS-pJgMTrL5bPzcIJxh0pLxHrGxd?usp=sharing) |
+| Student@256 | **4.43** | 1.50     | 3.41      | 7.84 | 4.48 | 4.19 | 4.29 | 5.63 | 5.12 | [skps](https://drive.google.com/drive/folders/1qCdK5igHlSYMTxVxbH0XnZgACqzpz20R?usp=sharing)    |
+| Teacher@256 | **3.90** | 5.76     | 11.23     | 6.67 | 3.94 | 3.78 | 3.78 | 4.82 | 4.52 | [skps](https://drive.google.com/drive/folders/1qCdK5igHlSYMTxVxbH0XnZgACqzpz20R?usp=sharing)    |
 
 
 
