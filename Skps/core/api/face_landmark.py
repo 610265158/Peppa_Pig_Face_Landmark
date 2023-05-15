@@ -99,7 +99,7 @@ class FaceLandmark:
 
 
 
-        cv2.imshow('i am watching u * * %d' % i, crop_image)
+        #cv2.imshow('i am watching u * * %d' % i, crop_image)
 
         return crop_image, [h, w, bbox[1], bbox[0], add]
 
