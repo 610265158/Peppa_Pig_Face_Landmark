@@ -68,73 +68,6 @@ class AlaskaDataIter():
 
         return len(self.df)
 
-    def balance(self, ):
-        df = copy.deepcopy(self.df)
-
-        expanded = []
-        lar_count = 0
-        for i in tqdm(range(len(df))):
-
-            cur_df = df[i]
-
-            ### 300w  balance,  according to keypoints
-            ann = cur_df.split()
-            label = np.array(ann[:98 * 2], dtype=np.float32).reshape([-1, 2])
-
-            bbox = [float(np.min(label[:, 0])), float(np.min(label[:, 1])), float(np.max(label[:, 0])),
-                    float(np.max(label[:, 1]))]
-
-            bbox_width = bbox[2] - bbox[0]
-            bbox_height = bbox[3] - bbox[1]
-
-            # if bbox_width < 50 or bbox_height < 50:
-            #     res_anns.remove(ann)
-            cnt = 0
-            left_eye_close = np.sqrt(
-                np.square(label[62, 0] - label[66, 0]) +
-                np.square(label[62, 1] - label[66, 1])) / bbox_height < self.eye_close_thres
-
-            right_eye_close = np.sqrt(
-                np.square(label[70, 0] - label[74, 0]) +
-                np.square(label[70, 1] - label[74, 1])) / bbox_height < self.eye_close_thres
-
-            if left_eye_close or right_eye_close:
-                for i in range(10):
-                    expanded.append(cur_df)
-                # lar_count += 1
-
-            ##half face
-            if np.sqrt(np.square(label[60, 0] - label[72, 0]) +
-                       np.square(label[60, 1] - label[72, 1])) / bbox_width < 0.5:
-                for i in range(5):
-                    expanded.append(cur_df)
-
-            # open mouth
-            if np.sqrt(np.square(label[90, 0] - label[94, 0]) +
-                       np.square(label[90, 1] - label[94, 1])) / bbox_height > 0.15:
-                for i in range(2):
-                    expanded.append(cur_df)
-
-            if np.sqrt(np.square(label[90, 0] - label[94, 0]) +
-                       np.square(label[90, 1] - label[94, 1])) / cfg.MODEL.hin > self.big_mouth_open_thres:
-                for i in range(2):
-                    expanded.append(cur_df)
-
-            ##########eyes diff aug
-            if left_eye_close and not right_eye_close:
-                for i in range(15):
-                    expanded.append(cur_df)
-                lar_count += 1
-            if not left_eye_close and right_eye_close:
-                for i in range(15):
-                    expanded.append(cur_df)
-                lar_count += 1
-
-        print(lar_count)
-        self.df += expanded
-        logger.info('befor balance the dataset contains %d images' % (len(df)))
-        logger.info('after balanced the datasets contains %d samples' % (len(self.df)))
-
     def augmentationCropImage(self, img, bbox, joints=None, is_training=True):
 
         bbox = np.array(bbox).reshape(4, ).astype(np.float32)
@@ -236,25 +169,6 @@ class AlaskaDataIter():
         hm=np.concatenate([hm,offside_x,offside_y],axis=-1)
         return hm
 
-    def doeys(self, img, kps):
-
-        if random.uniform(0, 1) < 0.5:
-            eye_region = kps[60:67, :]
-            weights_labelel = [0, 1]
-
-        else:
-
-            eye_region = kps[68:75, :]
-            weights_labelel = [1, 0]
-
-        xmin = int(np.clip(np.min(eye_region[:, 0]) - 10, 0, cfg.MODEL.win))
-        ymin = int(np.clip(np.min(eye_region[:, 1]) - 10, 0, cfg.MODEL.hin))
-        xmax = int(np.clip(np.max(eye_region[:, 0]) + 10, 0, cfg.MODEL.win))
-        ymax = int(np.clip(np.max(eye_region[:, 1]) + 10, 0, cfg.MODEL.hin))
-
-        img[ymin:ymax, xmin:xmax, :] = 0
-
-        return img, weights_labelel
 
     def single_map_func(self, dp, is_training):
         """Data augmentation function."""
@@ -326,23 +240,9 @@ class AlaskaDataIter():
                    np.square(label[90, 1] - label[94, 1])) / cfg.MODEL.hin > self.big_mouth_open_thres:
             cls_label[3] = 1
 
-        if is_training:
-            kps_weight = np.ones_like(label)
-            cls_weight = np.ones_like(cls_label)
-            if random.uniform(0, 1) > 0.5:
 
-                crop_image, weights = self.doeys(crop_image, label)
-
-                if weights == [0, 1]:
-                    kps_weight[60:67, :] = 0
-                    cls_weight[0] = 0
-                else:
-                    kps_weight[68:75, :] = 0
-                    cls_weight[1] = 0
-
-        else:
-            kps_weight = np.ones_like(label)
-            cls_weight = np.ones_like(cls_label)
+        kps_weight = np.ones_like(label)
+        cls_weight = np.ones_like(cls_label)
 
         crop_image_height, crop_image_width, _ = crop_image.shape
 
