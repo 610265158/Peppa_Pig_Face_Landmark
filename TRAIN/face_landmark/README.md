@@ -2,6 +2,9 @@
 
 A simple face aligment method, based on pytorch
 
+# Update  
+The train project has been integrated to [mmpose/skps](https://github.com/open-mmlab/mmpose/tree/main/projects/skps). 
+And the codes will be reconstructed soon. 
 
 ## introduction
 
